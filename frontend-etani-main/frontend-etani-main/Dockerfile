@@ -1,5 +1,5 @@
 # Stage 1: Build Flutter Web
-FROM ghcr.io/cirruslabs/flutter:3.10.6 AS build-env
+FROM ghcr.io/cirruslabs/flutter:stable AS build-env
 
 WORKDIR /app
 
