@@ -5,8 +5,24 @@ import '../../core/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
-class HomePage extends StatelessWidget {
+import '../analysis/analysis.dart';
+
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TextEditingController _locationController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _locationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,6 +150,7 @@ class HomePage extends StatelessWidget {
                   const Text("Pilih Lokasi Lahan", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark)),
                   const SizedBox(height: 8),
                   TextField(
+                    controller: _locationController,
                     decoration: InputDecoration(
                       hintText: "Cari nama desa, kota, atau area...",
                       hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
@@ -158,30 +175,54 @@ class HomePage extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                       ),
-                      onPressed: () async {
+                      onPressed: _isLoading ? null : () async {
+                        final city = _locationController.text.trim();
+                        if (city.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Silakan masukkan nama kota terlebih dahulu')));
+                          return;
+                        }
+
+                        setState(() {
+                          _isLoading = true;
+                        });
+
                         try {
-                          final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/health'));
+                          final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/today?city=${Uri.encodeComponent(city)}'));
+                          
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Backend Response: ${jsonDecode(response.body)['status']}'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
+                            setState(() {
+                              _isLoading = false;
+                            });
+
+                            if (response.statusCode == 200) {
+                              final data = jsonDecode(response.body);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AnalysisPage(weatherData: data),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Gagal mengambil data: ${response.statusCode}'), backgroundColor: Colors.red),
+                              );
+                            }
                           }
                         } catch (e) {
                           if (context.mounted) {
+                            setState(() {
+                              _isLoading = false;
+                            });
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Gagal koneksi: $e'),
-                                backgroundColor: Colors.red,
-                              ),
+                              SnackBar(content: Text('Gagal koneksi: $e'), backgroundColor: Colors.red),
                             );
                           }
                         }
                       },
-                      icon: const Icon(Icons.bar_chart, color: Colors.white, size: 20),
-                      label: const Text("Analisis Sekarang", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      icon: _isLoading 
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Icon(Icons.bar_chart, color: Colors.white, size: 20),
+                      label: Text(_isLoading ? "Menganalisis..." : "Analisis Sekarang", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   )
                 ],

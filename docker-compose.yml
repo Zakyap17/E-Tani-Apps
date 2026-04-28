@@ -11,6 +11,11 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - DB_HOST=192.168.x.x
+      - DB_USER=myuser
+      - DB_PASSWORD=mypassword
+      - DB_NAME=mydb
+      - DB_PORT=5432
     networks:
       - etani-network
 

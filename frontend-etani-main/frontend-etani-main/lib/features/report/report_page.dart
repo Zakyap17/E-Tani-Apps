@@ -1,9 +1,30 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/colors.dart';
 import '../../core/widget/app_logo.dart';
+import '../../core/constants/api_constants.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class ReportPage extends StatelessWidget {
+class ReportPage extends StatefulWidget {
   const ReportPage({super.key});
+
+  @override
+  State<ReportPage> createState() => _ReportPageState();
+}
+
+class _ReportPageState extends State<ReportPage> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _descController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,15 +63,15 @@ class ReportPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildInputLabel("Nama Lengkap"),
-                  _buildTextField("Misal: Budi Santoso"),
+                  _buildTextField("Misal: Budi Santoso", controller: _nameController),
                   const SizedBox(height: 16),
                   
                   _buildInputLabel("Alamat Email"),
-                  _buildTextField("budi@petani.id"),
+                  _buildTextField("budi@petani.id", controller: _emailController),
                   const SizedBox(height: 16),
                   
                   _buildInputLabel("Deskripsi Kendala"),
-                  _buildTextField("Jelaskan secara singkat kendala yang dialami, misalnya: 'Daun padi menguning pada usia 30 hari...'", maxLines: 4),
+                  _buildTextField("Jelaskan secara singkat kendala yang dialami, misalnya: 'Daun padi menguning pada usia 30 hari...'", maxLines: 4, controller: _descController),
                   const SizedBox(height: 16),
                   
                   const Text(
@@ -67,9 +88,58 @@ class ReportPage extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                       ),
-                      onPressed: () {},
-                      icon: const Icon(Icons.send, color: Colors.white, size: 18),
-                      label: const Text("Kirim Laporan", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      onPressed: _isLoading ? null : () async {
+                        final name = _nameController.text.trim();
+                        final email = _emailController.text.trim();
+                        final desc = _descController.text.trim();
+
+                        if (name.isEmpty || email.isEmpty || desc.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Semua field harus diisi')));
+                          return;
+                        }
+
+                        setState(() {
+                          _isLoading = true;
+                        });
+
+                        try {
+                          final response = await http.post(
+                            Uri.parse('${ApiConstants.baseUrl}/report'),
+                            headers: {'Content-Type': 'application/json'},
+                            body: jsonEncode({
+                              'name': name,
+                              'email': email,
+                              'description': desc,
+                            }),
+                          );
+
+                          if (context.mounted) {
+                            setState(() {
+                              _isLoading = false;
+                            });
+
+                            if (response.statusCode == 201) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Laporan berhasil terkirim ke sistem kami!'), backgroundColor: Colors.green));
+                              _nameController.clear();
+                              _emailController.clear();
+                              _descController.clear();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal mengirim: ${jsonDecode(response.body)['error']}'), backgroundColor: Colors.red));
+                            }
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Koneksi gagal: $e'), backgroundColor: Colors.red));
+                          }
+                        }
+                      },
+                      icon: _isLoading 
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Icon(Icons.send, color: Colors.white, size: 18),
+                      label: Text(_isLoading ? "Mengirim..." : "Kirim Laporan", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -129,8 +199,9 @@ class ReportPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(String hint, {int maxLines = 1}) {
+  Widget _buildTextField(String hint, {int maxLines = 1, TextEditingController? controller}) {
     return TextField(
+      controller: controller,
       maxLines: maxLines,
       decoration: InputDecoration(
         hintText: hint,

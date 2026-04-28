@@ -3,7 +3,9 @@ import '../../core/constants/colors.dart';
 import '../../core/widget/app_logo.dart';
 
 class AnalysisPage extends StatelessWidget {
-  const AnalysisPage({super.key});
+  final Map<String, dynamic> weatherData;
+
+  const AnalysisPage({super.key, required this.weatherData});
 
   @override
   Widget build(BuildContext context) {
@@ -43,18 +45,21 @@ class AnalysisPage extends StatelessWidget {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
+                    children: [
                       Text("KONDISI SAAT INI", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textLight)),
-                      Icon(Icons.wb_cloudy_outlined, color: AppColors.primary, size: 32),
+                      Icon(
+                        weatherData['current']['weather'].toString().toLowerCase().contains('hujan') ? Icons.water_drop_outlined : Icons.wb_sunny_outlined, 
+                        color: AppColors.primary, size: 32
+                      ),
                     ],
                   ),
-                  const Text("28°C", style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
+                  Text("${weatherData['current']['temperature']}°C", style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      _buildWeatherChip(Icons.water_drop_outlined, "Kelembaban", "75%"),
+                      _buildWeatherChip(Icons.thermostat_outlined, "Cuaca", weatherData['current']['weather']),
                       const SizedBox(width: 12),
-                      _buildWeatherChip(Icons.umbrella_outlined, "Peluang Hujan", "40%"),
+                      _buildWeatherChip(Icons.location_on_outlined, "Lahan", weatherData['location']),
                     ],
                   )
                 ],
@@ -84,9 +89,9 @@ class AnalysisPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    "Cuaca hari ini cukup cerah dengan sedikit kelembaban. Suhu tanah sangat ideal untuk pertumbuhan tunas baru. Namun, perhatikan peluang hujan ringan di sore hari yang dapat membantu kelembaban alami tanah tanpa perlu penyiraman ekstra.",
-                    style: TextStyle(fontSize: 13, color: AppColors.textLight, height: 1.5),
+                  Text(
+                    "${weatherData['insight']}. ${weatherData['action_plan']}",
+                    style: const TextStyle(fontSize: 13, color: AppColors.textLight, height: 1.5),
                   ),
                 ],
               ),
@@ -109,29 +114,22 @@ class AnalysisPage extends StatelessWidget {
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text("Rekomendasi Utama", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    child: const Text("Tindakan Segera", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(height: 16),
-                  const Text("Cocok untuk\nMenanam", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, height: 1.2)),
+                  Text(weatherData['recommendation']['action'].toString(), style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, height: 1.2)),
                   const SizedBox(height: 12),
-                  const Text(
-                    "Kondisi tanah dan suhu saat ini optimal untuk memulai penanaman bibit baru.",
-                    style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                  Text(
+                    weatherData['recommendation']['note'].toString(),
+                    style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      _buildCropBtn(Icons.eco_outlined, "Sayuran"),
-                      const SizedBox(width: 16),
-                      _buildCropBtn(Icons.local_florist_outlined, "Palawija"),
-                    ],
-                  )
                 ],
               ),
             ),
             const SizedBox(height: 20),
 
-            // Hourly Forecast
+            // Daily Forecast
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -141,15 +139,22 @@ class AnalysisPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Prakiraan Cuaca Per Jam", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text("Prakiraan Cuaca 3 Hari", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildHourlyForecast("08:00", Icons.wb_sunny_outlined, "26°", false),
-                      _buildHourlyForecast("10:00", Icons.wb_cloudy_outlined, "28°", false),
-                      _buildHourlyForecast("12:00", Icons.wb_cloudy_outlined, "30°", true),
-                    ],
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(
+                      (weatherData['forecast'] as List).length,
+                      (index) {
+                        final fd = weatherData['forecast'][index];
+                        return _buildHourlyForecast(
+                          fd['day'], 
+                          fd['weather'].toString().toLowerCase().contains('hujan') ? Icons.water_drop_outlined : Icons.wb_sunny_outlined, 
+                          "${fd['temperature']}°", 
+                          index == 0
+                        );
+                      }
+                    ),
                   )
                 ],
               ),
@@ -184,9 +189,9 @@ class AnalysisPage extends StatelessWidget {
                         const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text("Penyiraman", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                            Text("Setiap 2 hari sekali", style: TextStyle(fontSize: 12, color: AppColors.textLight)),
+                          children: [
+                            Text("Penyiraman", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                            Text("Frekuensi: ${weatherData['recommendation']['frequency']}x dalam ${weatherData['recommendation']['interval_hours']} jam", style: const TextStyle(fontSize: 12, color: AppColors.textLight)),
                           ],
                         )
                       ],
