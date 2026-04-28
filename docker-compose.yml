@@ -15,7 +15,7 @@ services:
       - DB_USER=etani_user
       - DB_PASSWORD=etani_pass_123
       - DB_NAME=etani_db
-      - DB_PORT=5432
+      - DB_PORT=5436
     networks:
       - etani-network
 
