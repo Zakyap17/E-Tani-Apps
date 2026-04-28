@@ -6,5 +6,5 @@ class ApiConstants {
   // static const String baseUrl = 'http://10.0.2.2:3000';
 
   // Untuk produksi di URL Nginx Web server Ubuntu:
-  static const String baseUrl = 'http://etani.rogersapp.site/api';
+  static const String baseUrl = 'https://etani.rogersapp.site/api';
 }
