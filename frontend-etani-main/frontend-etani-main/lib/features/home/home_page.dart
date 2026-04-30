@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../core/constants/api_constants.dart';
 import '../../core/constants/colors.dart';
 import '../../core/widget/animated_ui.dart';
 import '../analysis/analysis.dart';
@@ -15,6 +20,55 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _isLoadingWeather = true;
+  String _currentCity = "Bandung";
+  String _temp = "22";
+  String _weather = "Cerah";
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLocationAndWeather();
+  }
+
+  Future<void> _fetchLocationAndWeather() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+        Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
+        List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+        if (placemarks.isNotEmpty) {
+          setState(() {
+            _currentCity = placemarks.first.locality ?? placemarks.first.subAdministrativeArea ?? "Bandung";
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error location: $e");
+    }
+
+    try {
+      final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/today?city=$_currentCity'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _temp = data['current']['temperature']?.toString() ?? "22";
+          _weather = data['current']['weather'] ?? "Cerah";
+          _currentCity = data['location'] ?? _currentCity;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error weather: $e");
+    } finally {
+      setState(() {
+        _isLoadingWeather = false;
+      });
+    }
+  }
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 11) {
@@ -141,9 +195,11 @@ class _HomePageState extends State<HomePage> {
           left: 24,
           right: 24,
           bottom: -45,
-          child: const FadeSlideAnimation(
+          child: FadeSlideAnimation(
             delay: 400,
-            child: _StatsContainer(),
+            child: _isLoadingWeather 
+                ? const _LoadingStats()
+                : _StatsContainer(temp: _temp, weather: _weather, city: _currentCity),
           ),
         ),
       ],
@@ -503,8 +559,35 @@ class _HomePageState extends State<HomePage> {
 // ----------------------------------------------------------------------------
 // Custom UI Components & Animations
 
+class _LoadingStats extends StatelessWidget {
+  const _LoadingStats();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(35),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.15),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
+          ),
+        ],
+      ),
+      child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    );
+  }
+}
+
 class _StatsContainer extends StatelessWidget {
-  const _StatsContainer();
+  final String temp;
+  final String weather;
+  final String city;
+
+  const _StatsContainer({required this.temp, required this.weather, required this.city});
 
   @override
   Widget build(BuildContext context) {
@@ -524,11 +607,11 @@ class _StatsContainer extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildStatItem("Suhu", "22°C", Icons.thermostat_rounded, Colors.orange),
+          _buildStatItem("Lokasi", city.length > 10 ? city.substring(0, 8) + '..' : city, Icons.location_on_rounded, Colors.redAccent),
           Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
-          _buildStatItem("Lembab", "85%", Icons.water_drop_rounded, Colors.blue),
+          _buildStatItem("Suhu", "$temp°C", Icons.thermostat_rounded, Colors.orange),
           Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
-          _buildStatItem("Hujan", "80%", Icons.cloudy_snowing, Colors.blueGrey),
+          _buildStatItem("Cuaca", weather, Icons.wb_cloudy_rounded, Colors.blue),
         ],
       ),
     );
