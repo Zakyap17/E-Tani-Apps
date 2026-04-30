@@ -15,7 +15,9 @@ router.get('/health', (req, res) => {
 router.get('/today', async (req, res) => {
   try {
     const city = req.query.city;
-    const data = await getTodayData(city);
+    const lat = req.query.lat ? parseFloat(req.query.lat) : null;
+    const lon = req.query.lon ? parseFloat(req.query.lon) : null;
+    const data = await getTodayData(city, lat, lon);
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error' });

@@ -32,6 +32,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _fetchLocationAndWeather() async {
+    double? latitude;
+    double? longitude;
+
     try {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
@@ -40,7 +43,11 @@ class _HomePageState extends State<HomePage> {
 
       if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
         Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
-        List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+        latitude = position.latitude;
+        longitude = position.longitude;
+
+        // Reverse geocode hanya untuk nama kota di UI
+        List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
         if (placemarks.isNotEmpty) {
           setState(() {
             _currentCity = placemarks.first.locality ?? placemarks.first.subAdministrativeArea ?? "Bandung";
@@ -52,7 +59,15 @@ class _HomePageState extends State<HomePage> {
     }
 
     try {
-      final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/today?city=$_currentCity'));
+      // Kirim koordinat GPS langsung ke backend untuk akurasi maksimal
+      String apiUrl = '${ApiConstants.baseUrl}/today';
+      if (latitude != null && longitude != null) {
+        apiUrl += '?lat=$latitude&lon=$longitude';
+      } else {
+        apiUrl += '?city=$_currentCity';
+      }
+
+      final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -69,6 +84,7 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
+
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 11) {

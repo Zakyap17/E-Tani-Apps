@@ -1,59 +1,79 @@
-import { classifyWeather, generateMultiDayInsight } from './classifier.js';
+import { classifyWeatherCode, generateMultiDayInsight } from './classifier.js';
 
-export async function getTodayData(city) {
-  const locationQuery = city || process.env.DEFAULT_CITY || "Bandung";
-  const apiKey = process.env.WEATHER_API_KEY || "YOUR_API_KEY";
-  const baseUrl = process.env.WEATHER_BASE_URL || "http://api.weatherapi.com/v1";
-  
-  const url = `${baseUrl}/forecast.json?key=${apiKey}&q=${encodeURIComponent(locationQuery)}&days=3`;
+// WMO Weather Code to Indonesian label
+function wmoToLabel(code) {
+  if (code === 0) return 'Cerah';
+  if (code <= 3) return 'Berawan';
+  if (code <= 67) return 'Hujan';
+  if (code <= 77) return 'Hujan Es';
+  if (code <= 82) return 'Hujan Lebat';
+  return 'Badai';
+}
+
+// Geocode city name to lat/lon using Open-Meteo Geocoding (free, no key)
+async function geocodeCity(cityName) {
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=id&format=json`;
+  const response = await fetch(url);
+  const data = await response.json();
+  if (!data.results || data.results.length === 0) {
+    throw new Error(`Kota tidak ditemukan: ${cityName}`);
+  }
+  return {
+    lat: data.results[0].latitude,
+    lon: data.results[0].longitude,
+    name: data.results[0].name,
+  };
+}
+
+export async function getTodayData(city, lat, lon) {
+  let locationName = city || 'Bandung';
+  let latitude = lat;
+  let longitude = lon;
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Weather API returned status ${response.status}`);
+    // Jika lat/lon langsung tersedia (dari GPS frontend), gunakan langsung
+    if (!latitude || !longitude) {
+      const geo = await geocodeCity(locationName);
+      latitude = geo.lat;
+      longitude = geo.lon;
+      locationName = geo.name;
     }
-    
+
+    // Ambil cuaca dari Open-Meteo (gratis, tanpa API key)
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,relative_humidity_2m,precipitation_probability&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`;
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Open-Meteo error: ${response.status}`);
     const data = await response.json();
-    
-    const dayLabels = ["Hari Ini", "Besok", "Lusa"];
-    const forecastArray = [];
-    let currentRecommendation;
 
-    data.forecast.forecastday.forEach((dayData, index) => {
-      if (index > 2) return; // Safeguard to strictly process 3 days
+    const current = data.current;
+    const daily = data.daily;
 
-      const temp = dayData.day.avgtemp_c;
-      const precip = dayData.day.totalprecip_mm;
-      const conditionText = dayData.day.condition.text;
-
-      const classification = classifyWeather({ conditionText, precip, temp });
-
-      if (index === 0) {
-        currentRecommendation = classification.recommendation;
-      }
-
-      forecastArray.push({
-        day: dayLabels[index],
-        weather: classification.label,
-        temperature: temp
-      });
-    });
+    const dayLabels = ['Hari Ini', 'Besok', 'Lusa'];
+    const forecastArray = daily.time.slice(0, 3).map((_, i) => ({
+      day: dayLabels[i],
+      weather: wmoToLabel(daily.weathercode[i]),
+      temperature: Math.round((daily.temperature_2m_max[i] + daily.temperature_2m_min[i]) / 2),
+      precipitation: daily.precipitation_probability_max[i],
+    }));
 
     const multiDayInsight = generateMultiDayInsight(forecastArray);
 
     return {
-      location: data.location.name,
+      location: locationName,
       insight: multiDayInsight.insight,
       action_plan: multiDayInsight.action_plan,
       current: {
-        temperature: forecastArray[0].temperature,
-        weather: forecastArray[0].weather
+        temperature: Math.round(current.temperature_2m),
+        weather: wmoToLabel(current.weathercode),
+        humidity: current.relative_humidity_2m,
+        precipitation_probability: current.precipitation_probability,
       },
-      recommendation: currentRecommendation,
-      forecast: forecastArray
+      recommendation: forecastArray[0].weather,
+      forecast: forecastArray,
     };
   } catch (error) {
-    console.error("Error fetching weather data:", error.message);
-    throw new Error("Failed to retrieve weather data");
+    console.error('Error fetching weather data:', error.message);
+    throw new Error('Failed to retrieve weather data');
   }
 }
