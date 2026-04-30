@@ -15,6 +15,19 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 11) {
+      return "Pagi";
+    } else if (hour < 15) {
+      return "Siang";
+    } else if (hour < 18) {
+      return "Sore";
+    } else {
+      return "Malam";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,10 +118,10 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 const SizedBox(height: 40),
-                const FadeSlideAnimation(
+                FadeSlideAnimation(
                   child: Text(
-                    "Selamat Pagi,\nJuragan!",
-                    style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: -1.0),
+                    "Selamat ${_getGreeting()},\nJuragan!",
+                    style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: -1.0),
                   ),
                 ),
                 const SizedBox(height: 12),
