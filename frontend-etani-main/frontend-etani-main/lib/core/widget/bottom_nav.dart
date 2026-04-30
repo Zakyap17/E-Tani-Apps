@@ -15,8 +15,8 @@ class BottomNav extends StatefulWidget {
 class _BottomNavState extends State<BottomNav> {
   int index = 0;
 
-  final pages = [
-    const HomePage(),
+  List<Widget> get pages => [
+    HomePage(onNavigate: (i) => setState(() => index = i)),
     const SchedulePage(),
     const AnalysisPage(),
     const ReportPage(),

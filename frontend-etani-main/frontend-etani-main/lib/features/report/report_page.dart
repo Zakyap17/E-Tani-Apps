@@ -1,190 +1,124 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/colors.dart';
-import '../../core/widget/app_logo.dart';
-import '../../core/constants/api_constants.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../../core/widget/animated_ui.dart';
 
-class ReportPage extends StatefulWidget {
+class ReportPage extends StatelessWidget {
   const ReportPage({super.key});
-
-  @override
-  State<ReportPage> createState() => _ReportPageState();
-}
-
-class _ReportPageState extends State<ReportPage> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _descController = TextEditingController();
-  bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _descController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const AppLogo(),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Laporan Kendala",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textDark),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Sampaikan masalah atau kendala yang Anda hadapi di lahan. Tim ahli kami siap membantu mencarikan solusi terbaik untuk panen Anda.",
-              style: TextStyle(fontSize: 14, color: AppColors.textLight, height: 1.5),
-            ),
-            const SizedBox(height: 24),
-            
-            // Form Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildInputLabel("Nama Lengkap"),
-                  _buildTextField("Misal: Budi Santoso", controller: _nameController),
-                  const SizedBox(height: 16),
-                  
-                  _buildInputLabel("Alamat Email"),
-                  _buildTextField("budi@petani.id", controller: _emailController),
-                  const SizedBox(height: 16),
-                  
-                  _buildInputLabel("Deskripsi Kendala"),
-                  _buildTextField("Jelaskan secara singkat kendala yang dialami, misalnya: 'Daun padi menguning pada usia 30 hari...'", maxLines: 4, controller: _descController),
-                  const SizedBox(height: 16),
-                  
-                  const Text(
-                    "Mohon berikan detail yang jelas agar kami dapat memberikan solusi yang tepat.",
-                    style: TextStyle(fontSize: 10, color: AppColors.textLight),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      ),
-                      onPressed: _isLoading ? null : () async {
-                        final name = _nameController.text.trim();
-                        final email = _emailController.text.trim();
-                        final desc = _descController.text.trim();
-
-                        if (name.isEmpty || email.isEmpty || desc.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Semua field harus diisi')));
-                          return;
-                        }
-
-                        setState(() {
-                          _isLoading = true;
-                        });
-
-                        try {
-                          final response = await http.post(
-                            Uri.parse('${ApiConstants.baseUrl}/report'),
-                            headers: {'Content-Type': 'application/json'},
-                            body: jsonEncode({
-                              'name': name,
-                              'email': email,
-                              'description': desc,
-                            }),
-                          );
-
-                          if (context.mounted) {
-                            setState(() {
-                              _isLoading = false;
-                            });
-
-                            if (response.statusCode == 201) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Laporan berhasil terkirim ke sistem kami!'), backgroundColor: Colors.green));
-                              _nameController.clear();
-                              _emailController.clear();
-                              _descController.clear();
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal mengirim: ${jsonDecode(response.body)['error']}'), backgroundColor: Colors.red));
-                            }
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            setState(() {
-                              _isLoading = false;
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Koneksi gagal: $e'), backgroundColor: Colors.red));
-                          }
-                        }
-                      },
-                      icon: _isLoading 
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Icon(Icons.send, color: Colors.white, size: 18),
-                      label: Text(_isLoading ? "Mengirim..." : "Kirim Laporan", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            // Help Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0EAE6), // Light brownish grey
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF5D3C8), // Peachy color
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.support_agent, color: Colors.brown, size: 24),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text("Butuh bantuan langsung?", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        SizedBox(height: 6),
-                        Text(
-                          "Jika kendala bersifat mendesak, Anda dapat menghubungi layanan pelanggan kami melalui telepon di hari kerja.",
-                          style: TextStyle(fontSize: 12, color: AppColors.textLight, height: 1.4),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
-            const SizedBox(height: 80),
+            _buildHeroSection(),
+            const SizedBox(height: 80), // Spacing for floating card
+            _buildFormSection(),
+            const SizedBox(height: 100),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeroSection() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          height: 280,
+          decoration: const BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(80)),
+          ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Image.asset('assets/images/logo.png', height: 40),
+                    const SizedBox(width: 12),
+                    const Text("Laporan", style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: -1.0)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const FadeSlideAnimation(
+                  child: Text("Laporkan masalah pada lahan\nagar tim kami bisa membantu.", style: TextStyle(color: Colors.white70, fontSize: 16, height: 1.4)),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Positioned(
+          left: 24, right: 24, bottom: -50,
+          child: const FadeSlideAnimation(
+            delay: 200,
+            child: _HelpCallContainer(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const FadeSlideAnimation(
+            delay: 300,
+            child: Text("Detail Masalah", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark, letterSpacing: -0.5)),
+          ),
+          const SizedBox(height: 24),
+          FadeSlideAnimation(
+            delay: 400,
+            child: _buildInputLabel("Kategori Masalah"),
+          ),
+          FadeSlideAnimation(
+            delay: 450,
+            child: _buildDropdown(),
+          ),
+          const SizedBox(height: 24),
+          FadeSlideAnimation(
+            delay: 500,
+            child: _buildInputLabel("Deskripsi Lengkap"),
+          ),
+          FadeSlideAnimation(
+            delay: 550,
+            child: _buildTextField(hint: "Ceritakan kondisi tanaman atau tanah Anda secara rinci...", maxLines: 4),
+          ),
+          const SizedBox(height: 24),
+          FadeSlideAnimation(
+            delay: 600,
+            child: _buildInputLabel("Foto Kondisi Lahan (Opsional)"),
+          ),
+          FadeSlideAnimation(
+            delay: 650,
+            child: _buildPhotoUploadBox(),
+          ),
+          const SizedBox(height: 40),
+          FadeSlideAnimation(
+            delay: 700,
+            child: BouncingButton(
+                onTap: () {},
+                child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))]),
+                    alignment: Alignment.center,
+                    child: const Text("Kirim Laporan", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16))
+                )
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -194,25 +128,113 @@ class _ReportPageState extends State<ReportPage> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         label,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.textDark),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark),
       ),
     );
   }
 
-  Widget _buildTextField(String hint, {int maxLines = 1, TextEditingController? controller}) {
+  Widget _buildDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.greyBackground, width: 1.5),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primary),
+          hint: const Text("Pilih kategori...", style: TextStyle(color: Colors.grey, fontSize: 15)),
+          items: ["Hama", "Penyakit Tanaman", "Kekeringan", "Irigasi Rusak"]
+              .map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontWeight: FontWeight.w600))))
+              .toList(),
+          onChanged: (val) {},
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({required String hint, int maxLines = 1}) {
     return TextField(
-      controller: controller,
       maxLines: maxLines,
+      style: const TextStyle(fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+        hintStyle: const TextStyle(color: Colors.grey, fontSize: 15),
         filled: true,
-        fillColor: AppColors.greyBackground,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.all(20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: AppColors.greyBackground, width: 1.5)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: AppColors.greyBackground, width: 1.5)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+      ),
+    );
+  }
+
+  Widget _buildPhotoUploadBox() {
+    return BouncingButton(
+      onTap: () {},
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 30),
+        decoration: BoxDecoration(
+          color: AppColors.lightGreen.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 2, style: BorderStyle.none),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))]),
+              child: const Icon(Icons.cloud_upload_rounded, color: AppColors.primary, size: 28),
+            ),
+            const SizedBox(height: 12),
+            const Text("Tap untuk unggah foto", style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary)),
+            const SizedBox(height: 4),
+            const Text("Maks. 5MB (JPG, PNG)", style: TextStyle(fontSize: 12, color: AppColors.textLight)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HelpCallContainer extends StatelessWidget {
+  const _HelpCallContainer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFFFFB300), Color(0xFFFF9800)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 24, offset: const Offset(0, 10))
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+            child: const Icon(Icons.support_agent_rounded, color: Colors.white, size: 32),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Butuh Bantuan Darurat?", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
+                const SizedBox(height: 4),
+                Text("Tim ahli kami siap memandu.", style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

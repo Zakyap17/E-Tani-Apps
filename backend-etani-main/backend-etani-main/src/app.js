@@ -1,10 +1,8 @@
+import 'dotenv/config';
 import express from 'express';
 import routes from './routes.js';
-import dotenv from "dotenv";
 import cors from 'cors';
 import { initDb } from './db.js';
-
-dotenv.config();
 
 // Iniasilisasi struktur tabel PostgreSQL
 initDb();
