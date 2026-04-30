@@ -1,4 +1,4 @@
-import { classifyWeatherCode, generateMultiDayInsight } from './classifier.js';
+import { generateMultiDayInsight } from './classifier.js';
 
 // WMO Weather Code to Indonesian label
 function wmoToLabel(code) {
