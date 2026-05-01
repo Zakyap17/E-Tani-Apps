@@ -2,8 +2,29 @@ import 'package:flutter/material.dart';
 import '../../core/constants/colors.dart';
 import '../../core/widget/animated_ui.dart';
 
-class SchedulePage extends StatelessWidget {
+class SchedulePage extends StatefulWidget {
   const SchedulePage({super.key});
+
+  @override
+  State<SchedulePage> createState() => _SchedulePageState();
+}
+
+class _SchedulePageState extends State<SchedulePage> {
+  late int _selectedIndex;
+  late List<DateTime> _dates;
+
+  static const List<String> _dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+
+  @override
+  void initState() {
+    super.initState();
+    final today = DateTime.now();
+    // Tampilkan 7 hari mulai dari hari ini
+    _dates = List.generate(7, (i) => today.add(Duration(days: i)));
+    _selectedIndex = 0; // Default: hari ini dipilih
+  }
+
+  String _dayAbbr(DateTime date) => _dayNames[date.weekday - 1];
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +36,7 @@ class SchedulePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeroSection(),
-            const SizedBox(height: 80), // Spacing for floating date selector
+            const SizedBox(height: 80),
             _buildTimelineSection(),
             const SizedBox(height: 100),
           ],
@@ -72,22 +93,22 @@ class SchedulePage extends StatelessWidget {
             delay: 200,
             child: SizedBox(
               height: 95,
-              child: ListView(
+              child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 clipBehavior: Clip.none,
-                children: [
-                  _dateItem("Sen", "12", false),
-                  const SizedBox(width: 12),
-                  _dateItem("Sel", "13", true),
-                  const SizedBox(width: 12),
-                  _dateItem("Rab", "14", false),
-                  const SizedBox(width: 12),
-                  _dateItem("Kam", "15", false),
-                  const SizedBox(width: 12),
-                  _dateItem("Jum", "16", false),
-                ],
+                itemCount: _dates.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final date = _dates[index];
+                  return _dateItem(
+                    _dayAbbr(date),
+                    date.day.toString(),
+                    index == _selectedIndex,
+                    onTap: () => setState(() => _selectedIndex = index),
+                  );
+                },
               ),
             ),
           ),
@@ -96,9 +117,9 @@ class SchedulePage extends StatelessWidget {
     );
   }
 
-  Widget _dateItem(String day, String date, bool isSelected) {
+  Widget _dateItem(String day, String date, bool isSelected, {VoidCallback? onTap}) {
     return BouncingButton(
-      onTap: () {},
+      onTap: onTap ?? () {},
       child: Container(
         width: 75,
         decoration: BoxDecoration(
