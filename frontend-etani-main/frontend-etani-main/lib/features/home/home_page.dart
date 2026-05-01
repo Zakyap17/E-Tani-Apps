@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import '../../core/constants/api_constants.dart';
 import '../../core/constants/colors.dart';
@@ -291,7 +293,7 @@ class _HomePageState extends State<HomePage> {
                   child: BouncingButton(
                     onTap: () {
                       if (widget.onNavigate != null) {
-                        widget.onNavigate!(2); // Navigasi langsung ke tab Analysis
+                        widget.onNavigate!(2);
                       } else {
                         Navigator.push(context, MaterialPageRoute(builder: (context) => const AnalysisPage()));
                       }
@@ -336,7 +338,7 @@ class _HomePageState extends State<HomePage> {
                       child: BouncingButton(
                         onTap: () {
                           if (widget.onNavigate != null) {
-                            widget.onNavigate!(1); // Navigasi langsung ke tab Schedule (Tanam)
+                            widget.onNavigate!(1);
                           } else {
                             Navigator.push(context, MaterialPageRoute(builder: (context) => const SchedulePage()));
                           }
@@ -365,7 +367,7 @@ class _HomePageState extends State<HomePage> {
                       child: BouncingButton(
                         onTap: () {
                           if (widget.onNavigate != null) {
-                            widget.onNavigate!(3); // Navigasi langsung ke tab Report (Lapor)
+                            widget.onNavigate!(3);
                           } else {
                             Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportPage()));
                           }
@@ -393,7 +395,66 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
+          // Tombol Download APK - hanya muncul di web browser
+          if (kIsWeb) const SizedBox(height: 20),
+          if (kIsWeb) _buildDownloadApkBanner(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDownloadApkBanner() {
+    return FadeSlideAnimation(
+      delay: 500,
+      child: BouncingButton(
+        onTap: () async {
+          final uri = Uri.parse('/downloads/E-Tani.apk');
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1B5E20), Color(0xFF388E3C)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.android_rounded, color: Colors.white, size: 36),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Download Aplikasi E-Tani",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "Tersedia untuk Android · Gratis",
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.download_rounded, color: Colors.white, size: 28),
+            ],
+          ),
+        ),
       ),
     );
   }
