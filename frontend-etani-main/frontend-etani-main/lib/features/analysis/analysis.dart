@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../core/constants/api_constants.dart';
 import '../../core/constants/colors.dart';
 import '../../core/widget/animated_ui.dart';
 
@@ -13,12 +18,19 @@ class AnalysisPage extends StatefulWidget {
 
 class _AnalysisPageState extends State<AnalysisPage> {
   bool _showResult = false;
-  
+
   // Data input
   final TextEditingController _lokasiCtrl = TextEditingController();
-  final TextEditingController _suhuCtrl = TextEditingController();
-  final TextEditingController _kelembapanCtrl = TextEditingController();
-  String _selectedCuaca = 'Cerah'; // 'Cerah', 'Berawan', 'Hujan'
+
+  // Weather & location state
+  bool _isLoadingWeather = true;
+  String _temp = '--';
+  String _weather = '--';
+  String _humidity = '--';
+  String _rainChance = '--';
+  String _city = 'Memuat...';
+  double? _lat;
+  double? _lon;
 
   @override
   void initState() {
@@ -26,21 +38,74 @@ class _AnalysisPageState extends State<AnalysisPage> {
     if (widget.initialLocation != null) {
       _lokasiCtrl.text = widget.initialLocation!;
     }
+    _fetchLocationAndWeather();
   }
 
   @override
   void dispose() {
     _lokasiCtrl.dispose();
-    _suhuCtrl.dispose();
-    _kelembapanCtrl.dispose();
     super.dispose();
   }
 
+  Future<void> _fetchLocationAndWeather() async {
+    setState(() => _isLoadingWeather = true);
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) throw Exception('GPS tidak aktif');
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.deniedForever) throw Exception('Izin GPS ditolak');
+
+      final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      _lat = pos.latitude;
+      _lon = pos.longitude;
+
+      // Reverse geocoding untuk nama kota
+      try {
+        final placemarks = await placemarkFromCoordinates(_lat!, _lon!);
+        if (placemarks.isNotEmpty) {
+          final p = placemarks.first;
+          final cityName = p.subAdministrativeArea ?? p.administrativeArea ?? p.locality ?? 'Lokasi Anda';
+          setState(() {
+            _city = cityName;
+            _lokasiCtrl.text = cityName;
+          });
+        }
+      } catch (_) {
+        setState(() {
+          _city = '${_lat!.toStringAsFixed(4)}, ${_lon!.toStringAsFixed(4)}';
+          _lokasiCtrl.text = _city;
+        });
+      }
+
+      // Fetch cuaca dari backend
+      final uri = Uri.parse('${ApiConstants.baseUrl}/today?lat=$_lat&lon=$_lon');
+      final res = await http.get(uri).timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        setState(() {
+          _temp = (data['temperature'] ?? data['temp'] ?? '--').toString();
+          _weather = (data['weather'] ?? data['condition'] ?? 'Cerah').toString();
+          _humidity = (data['humidity'] ?? '75').toString();
+          _rainChance = (data['rain_chance'] ?? data['precipitation'] ?? '20').toString();
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _city = 'Gagal memuat lokasi';
+        _temp = '--';
+        _weather = 'Error';
+      });
+    } finally {
+      setState(() => _isLoadingWeather = false);
+    }
+  }
+
   void _submitForm() {
-    // Validasi sederhana atau langsung lanjut
-    setState(() {
-      _showResult = true;
-    });
+    setState(() => _showResult = true);
   }
 
   @override
@@ -72,19 +137,16 @@ class _AnalysisPageState extends State<AnalysisPage> {
                 
                 // Opsi Gunakan GPS
                 GestureDetector(
-                  onTap: () {
-                    // Simulasi ambil lokasi
-                    setState(() {
-                      _lokasiCtrl.text = "Lokasi Saya Saat Ini";
-                    });
-                  },
+                  onTap: _fetchLocationAndWeather,
                   child: Row(
-                    children: const [
-                      Icon(Icons.my_location_rounded, color: AppColors.primary, size: 20),
-                      SizedBox(width: 8),
+                    children: [
+                      _isLoadingWeather
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
+                          : const Icon(Icons.my_location_rounded, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 8),
                       Text(
-                        "Gunakan lokasi Anda saat ini (GPS)",
-                        style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 14),
+                        _isLoadingWeather ? "Mendeteksi lokasi..." : "Gunakan lokasi Anda saat ini (GPS)",
+                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 14),
                       ),
                     ],
                   ),
@@ -185,9 +247,11 @@ class _AnalysisPageState extends State<AnalysisPage> {
           left: 24,
           right: 24,
           bottom: -45,
-          child: const FadeSlideAnimation(
+          child: FadeSlideAnimation(
             delay: 400,
-            child: _AutoWeatherContainer(),
+            child: _isLoadingWeather
+                ? _LoadingContainer()
+                : _AutoWeatherContainer(temp: _temp, weather: _weather, humidity: _humidity),
           ),
         ),
       ],
@@ -302,9 +366,14 @@ class _AnalysisPageState extends State<AnalysisPage> {
           left: 24,
           right: 24,
           bottom: -60,
-          child: const FadeSlideAnimation(
+          child: FadeSlideAnimation(
             delay: 200,
-            child: _CurrentConditionContainer(),
+            child: _CurrentConditionContainer(
+              temp: _temp,
+              weather: _weather,
+              humidity: _humidity,
+              rainChance: _rainChance,
+            ),
           ),
         ),
       ],
@@ -480,8 +549,27 @@ class _AnalysisPageState extends State<AnalysisPage> {
   }
 }
 
+class _LoadingContainer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(35),
+        boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.15), blurRadius: 30, offset: const Offset(0, 15))],
+      ),
+      child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    );
+  }
+}
+
 class _AutoWeatherContainer extends StatelessWidget {
-  const _AutoWeatherContainer();
+  final String temp;
+  final String weather;
+  final String humidity;
+
+  const _AutoWeatherContainer({required this.temp, required this.weather, required this.humidity});
 
   @override
   Widget build(BuildContext context) {
@@ -491,21 +579,17 @@ class _AutoWeatherContainer extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(35),
         boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.15),
-            blurRadius: 30,
-            offset: const Offset(0, 15),
-          ),
+          BoxShadow(color: AppColors.primary.withOpacity(0.15), blurRadius: 30, offset: const Offset(0, 15)),
         ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildStatItem("Suhu", "28°C", Icons.thermostat_rounded, Colors.orange),
+          _buildStatItem("Suhu", "$temp°C", Icons.thermostat_rounded, Colors.orange),
           Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
-          _buildStatItem("Cuaca", "Cerah", Icons.wb_sunny_rounded, Colors.amber),
+          _buildStatItem("Cuaca", weather, Icons.wb_cloudy_rounded, Colors.amber),
           Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
-          _buildStatItem("Lembab", "75%", Icons.water_drop_rounded, Colors.blue),
+          _buildStatItem("Lembab", "$humidity%", Icons.water_drop_rounded, Colors.blue),
         ],
       ),
     );
@@ -525,7 +609,17 @@ class _AutoWeatherContainer extends StatelessWidget {
 }
 
 class _CurrentConditionContainer extends StatelessWidget {
-  const _CurrentConditionContainer();
+  final String temp;
+  final String weather;
+  final String humidity;
+  final String rainChance;
+
+  const _CurrentConditionContainer({
+    required this.temp,
+    required this.weather,
+    required this.humidity,
+    required this.rainChance,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -545,23 +639,20 @@ class _CurrentConditionContainer extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), shape: BoxShape.circle),
                     child: const Icon(Icons.wb_sunny_rounded, size: 32, color: Colors.amber),
                   ),
                   const SizedBox(width: 16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Cerah", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
-                      Text("Kondisi Saat Ini", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textLight)),
+                    children: [
+                      Text(weather, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                      const Text("Kondisi Saat Ini", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textLight)),
                     ],
                   ),
                 ],
               ),
-              const Text("28°", style: TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.primary, height: 1.0, letterSpacing: -2.0)),
+              Text("$temp°", style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.primary, height: 1.0, letterSpacing: -2.0)),
             ],
           ),
           const SizedBox(height: 28),
@@ -572,11 +663,11 @@ class _CurrentConditionContainer extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   decoration: BoxDecoration(color: AppColors.lightGreen.withOpacity(0.5), borderRadius: BorderRadius.circular(24)),
                   child: Column(
-                    children: const [
-                      Icon(Icons.water_drop_rounded, size: 28, color: AppColors.secondary),
-                      SizedBox(height: 8),
-                      Text("75%", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
-                      Text("Kelembaban", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textLight)),
+                    children: [
+                      const Icon(Icons.water_drop_rounded, size: 28, color: AppColors.secondary),
+                      const SizedBox(height: 8),
+                      Text("$humidity%", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                      const Text("Kelembaban", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textLight)),
                     ],
                   ),
                 ),
@@ -587,11 +678,11 @@ class _CurrentConditionContainer extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   decoration: BoxDecoration(color: AppColors.lightGreen.withOpacity(0.5), borderRadius: BorderRadius.circular(24)),
                   child: Column(
-                    children: const [
-                      Icon(Icons.umbrella_rounded, size: 28, color: AppColors.secondary),
-                      SizedBox(height: 8),
-                      Text("40%", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
-                      Text("Peluang Hujan", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textLight)),
+                    children: [
+                      const Icon(Icons.umbrella_rounded, size: 28, color: AppColors.secondary),
+                      const SizedBox(height: 8),
+                      Text("$rainChance%", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                      const Text("Peluang Hujan", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textLight)),
                     ],
                   ),
                 ),

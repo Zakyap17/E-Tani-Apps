@@ -27,6 +27,9 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+    volumes:
+      # APK dan file download disimpan di host agar tetap ada setelah rebuild
+      - /home/etani-apps/etani/downloads:/usr/share/nginx/html/downloads
     depends_on:
       - backend-api
     networks:
