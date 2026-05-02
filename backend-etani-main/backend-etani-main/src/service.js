@@ -40,7 +40,7 @@ export async function getTodayData(city, lat, lon) {
     }
 
     // Ambil cuaca dari Open-Meteo (gratis, tanpa API key)
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,relative_humidity_2m,precipitation_probability&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,relative_humidity_2m,precipitation_probability&hourly=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`;
 
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Open-Meteo error: ${response.status}`);
@@ -48,6 +48,7 @@ export async function getTodayData(city, lat, lon) {
 
     const current = data.current;
     const daily = data.daily;
+    const hourly = data.hourly;
 
     const dayLabels = ['Hari Ini', 'Besok', 'Lusa'];
     const forecastArray = daily.time.slice(0, 3).map((_, i) => ({
@@ -56,6 +57,17 @@ export async function getTodayData(city, lat, lon) {
       temperature: Math.round((daily.temperature_2m_max[i] + daily.temperature_2m_min[i]) / 2),
       precipitation: daily.precipitation_probability_max[i],
     }));
+
+    // Generate 24 jam forecast
+    const currentHour = new Date().getHours();
+    const hourlyForecast = [];
+    for (let i = currentHour; i < currentHour + 24; i++) {
+      hourlyForecast.push({
+        time: hourly.time[i].split('T')[1],
+        temp: Math.round(hourly.temperature_2m[i]),
+        weather: wmoToLabel(hourly.weathercode[i]),
+      });
+    }
 
     const multiDayInsight = generateMultiDayInsight(forecastArray);
 
@@ -71,6 +83,7 @@ export async function getTodayData(city, lat, lon) {
       },
       recommendation: forecastArray[0].weather,
       forecast: forecastArray,
+      hourly: hourlyForecast,
     };
   } catch (error) {
     console.error('Error fetching weather data:', error.message);

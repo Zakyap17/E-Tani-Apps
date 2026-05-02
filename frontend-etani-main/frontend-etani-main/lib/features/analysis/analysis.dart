@@ -31,6 +31,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
   String _city = 'Memuat...';
   double? _lat;
   double? _lon;
+  List<dynamic> _hourlyData = [];
 
   @override
   void initState() {
@@ -89,10 +90,11 @@ class _AnalysisPageState extends State<AnalysisPage> {
         final current = data['current'];
         if (current != null) {
           setState(() {
-            _temp = (current['temperature'] ?? '--').toString();
+            _temp = (current['temperature'] ?? '22').toString();
             _weather = (current['weather'] ?? 'Cerah').toString();
             _humidity = (current['humidity'] ?? '75').toString();
             _rainChance = (current['precipitation_probability'] ?? '20').toString();
+            _hourlyData = data['hourly'] ?? [];
           });
         }
       }
@@ -444,26 +446,35 @@ class _AnalysisPageState extends State<AnalysisPage> {
         const SizedBox(height: 20),
         SizedBox(
           height: 140,
-          child: ListView(
+          child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 24),
             clipBehavior: Clip.none,
-            children: [
-              _buildHourlyItem("08:00", Icons.wb_sunny_rounded, "26°", false, 450),
-              const SizedBox(width: 16),
-              _buildHourlyItem("10:00", Icons.cloud_rounded, "28°", false, 500),
-              const SizedBox(width: 16),
-              _buildHourlyItem("12:00", Icons.cloud_rounded, "30°", true, 550),
-              const SizedBox(width: 16),
-              _buildHourlyItem("14:00", Icons.wb_cloudy_rounded, "29°", false, 600),
-              const SizedBox(width: 16),
-              _buildHourlyItem("16:00", Icons.water_drop_rounded, "27°", false, 650),
-            ],
+            itemCount: _hourlyData.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 16),
+            itemBuilder: (context, index) {
+              final item = _hourlyData[index];
+              return _buildHourlyItem(
+                item['time'] ?? "--:--",
+                _getWeatherIcon(item['weather'] ?? ""),
+                "${item['temp']}°",
+                index == 0,
+                450 + (index * 50),
+              );
+            },
           ),
         ),
       ],
     );
+  }
+
+  IconData _getWeatherIcon(String weather) {
+    if (weather.contains('Cerah')) return Icons.wb_sunny_rounded;
+    if (weather.contains('Berawan')) return Icons.cloud_rounded;
+    if (weather.contains('Hujan')) return Icons.water_drop_rounded;
+    if (weather.contains('Badai')) return Icons.thunderstorm_rounded;
+    return Icons.wb_cloudy_rounded;
   }
 
   Widget _buildHourlyItem(String time, IconData icon, String temp, bool isHighlighted, int delay) {
