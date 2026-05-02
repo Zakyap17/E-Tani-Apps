@@ -58,10 +58,9 @@ export async function getTodayData(city, lat, lon) {
       precipitation: daily.precipitation_probability_max[i],
     }));
 
-    // Generate 24 jam forecast
-    const currentHour = new Date().getHours();
+    // Generate 24 jam forecast (00:00 - 23:00)
     const hourlyForecast = [];
-    for (let i = currentHour; i < currentHour + 24; i++) {
+    for (let i = 0; i < 24; i++) {
       hourlyForecast.push({
         time: hourly.time[i].split('T')[1],
         temp: Math.round(hourly.temperature_2m[i]),
