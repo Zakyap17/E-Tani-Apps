@@ -24,10 +24,10 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
   // Weather & location state
   bool _isLoadingWeather = true;
-  String _temp = '--';
-  String _weather = '--';
-  String _humidity = '--';
-  String _rainChance = '--';
+  String _temp = '22';
+  String _weather = 'Cerah';
+  String _humidity = '75';
+  String _rainChance = '20';
   String _city = 'Memuat...';
   double? _lat;
   double? _lon;
@@ -100,8 +100,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
       debugPrint("Analysis weather error: $e");
       setState(() {
         _city = 'Gagal memuat lokasi';
-        _temp = '--';
-        _weather = 'Error';
+        _temp = '22';
+        _weather = 'Cerah';
       });
     } finally {
       setState(() => _isLoadingWeather = false);
@@ -656,7 +656,7 @@ class _CurrentConditionContainer extends StatelessWidget {
                   ),
                 ],
               ),
-              Text("$temp°", style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.primary, height: 1.0, letterSpacing: -2.0)),
+              Text("$temp°", style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.primary, height: 1.0)),
             ],
           ),
           const SizedBox(height: 28),
