@@ -86,14 +86,18 @@ class _AnalysisPageState extends State<AnalysisPage> {
       final res = await http.get(uri).timeout(const Duration(seconds: 10));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        setState(() {
-          _temp = (data['temperature'] ?? data['temp'] ?? '--').toString();
-          _weather = (data['weather'] ?? data['condition'] ?? 'Cerah').toString();
-          _humidity = (data['humidity'] ?? '75').toString();
-          _rainChance = (data['rain_chance'] ?? data['precipitation'] ?? '20').toString();
-        });
+        final current = data['current'];
+        if (current != null) {
+          setState(() {
+            _temp = (current['temperature'] ?? '--').toString();
+            _weather = (current['weather'] ?? 'Cerah').toString();
+            _humidity = (current['humidity'] ?? '75').toString();
+            _rainChance = (current['precipitation_probability'] ?? '20').toString();
+          });
+        }
       }
     } catch (e) {
+      debugPrint("Analysis weather error: $e");
       setState(() {
         _city = 'Gagal memuat lokasi';
         _temp = '--';
