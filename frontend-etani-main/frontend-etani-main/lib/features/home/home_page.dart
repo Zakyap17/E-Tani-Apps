@@ -408,10 +408,14 @@ class _HomePageState extends State<HomePage> {
       delay: 500,
       child: BouncingButton(
         onTap: () async {
-          final uri = Uri.parse('/downloads/E-Tani.apk');
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          }
+          // Buat URL absolut dari baseUrl (buang /api di akhir)
+          final downloadUrl = ApiConstants.baseUrl.replaceAll('/api', '') + '/downloads/E-Tani.apk';
+          final uri = Uri.parse(downloadUrl);
+          
+          await launchUrl(
+            uri,
+            mode: LaunchMode.externalApplication,
+          );
         },
         child: Container(
           width: double.infinity,
