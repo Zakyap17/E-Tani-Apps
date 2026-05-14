@@ -25,14 +25,29 @@ async function geocodeCity(cityName) {
   };
 }
 
+// Get city name from lat/lon using Open-Meteo Geocoding
+async function reverseGeocode(lat, lon) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=id`;
+    const response = await fetch(url, { headers: { 'User-Agent': 'e-Tani-App' } });
+    const data = await response.json();
+    return data.address.city || data.address.town || data.address.village || data.address.county || 'Lokasi Terdeteksi';
+  } catch (e) {
+    return 'Lokasi Terdeteksi';
+  }
+}
+
 export async function getTodayData(city, lat, lon) {
   let locationName = city || 'Bandung';
   let latitude = lat;
   let longitude = lon;
 
   try {
-    // Jika lat/lon langsung tersedia (dari GPS frontend), gunakan langsung
-    if (!latitude || !longitude) {
+    // Jika lat/lon tersedia, cari nama kotanya
+    if (latitude && longitude) {
+      locationName = await reverseGeocode(latitude, longitude);
+    } else {
+      // Jika hanya nama kota, cari koordinatnya
       const geo = await geocodeCity(locationName);
       latitude = geo.lat;
       longitude = geo.lon;

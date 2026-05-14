@@ -85,9 +85,8 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _temp = (data['current']?['temperature'] ?? "22").toString();
           _weather = data['current']?['weather'] ?? "Cerah";
-          // Jika backend mengembalikan nama lokasi, gunakan itu. Jika tidak, gunakan hasil geocoding atau default.
-          _currentCity = data['location'] ?? _currentCity;
-          if (_currentCity == "Mencari Lokasi...") _currentCity = "Bandung";
+          // PRIORITAS: Gunakan nama lokasi dari backend
+          _currentCity = data['location'] ?? "Bandung";
         });
       }
     } catch (e) {
