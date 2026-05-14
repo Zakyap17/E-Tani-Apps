@@ -1,13 +1,22 @@
 import { generateMultiDayInsight } from './classifier.js';
 
-// WMO Weather Code to Indonesian label
-function wmoToLabel(code) {
+// WMO Weather Code to Indonesian label (More Precise)
+function wmoToLabel(code, probability = 0) {
+  // Jika peluang hujan sangat rendah (< 20%), abaikan kode hujan/badai
+  if (probability < 20 && code > 3) {
+    if (code <= 48) return 'Berawan'; // Kabut jadi berawan
+    if (code <= 99) return 'Berawan'; // Hujan/Badai tapi peluang kecil jadi berawan
+  }
+
   if (code === 0) return 'Cerah';
   if (code <= 3) return 'Berawan';
-  if (code <= 67) return 'Hujan';
-  if (code <= 77) return 'Hujan Es';
+  if (code <= 48) return 'Kabut';
+  if (code <= 55) return 'Gerimis';
+  if (code <= 65) return 'Hujan';
+  if (code <= 77) return 'Salju/Hujan Es';
   if (code <= 82) return 'Hujan Lebat';
-  return 'Badai';
+  if (code <= 99) return 'Badai';
+  return 'Cerah';
 }
 
 // Geocode city name to lat/lon using Open-Meteo Geocoding (free, no key)
@@ -74,7 +83,7 @@ export async function getTodayData(city, lat, lon, ip) {
     }
 
     // Ambil cuaca dari Open-Meteo (gratis, tanpa API key)
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,weathercode,relative_humidity_2m,precipitation_probability&hourly=temperature_2m,apparent_temperature,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,weathercode,relative_humidity_2m,precipitation_probability&hourly=temperature_2m,apparent_temperature,weathercode,precipitation_probability&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`;
 
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Open-Meteo error: ${response.status}`);
@@ -87,7 +96,7 @@ export async function getTodayData(city, lat, lon, ip) {
     const dayLabels = ['Hari Ini', 'Besok', 'Lusa'];
     const forecastArray = daily.time.slice(0, 3).map((_, i) => ({
       day: dayLabels[i],
-      weather: wmoToLabel(daily.weathercode[i]),
+      weather: wmoToLabel(daily.weathercode[i], daily.precipitation_probability_max[i]),
       temperature: Math.round((daily.temperature_2m_max[i] + daily.temperature_2m_min[i]) / 2),
       precipitation: daily.precipitation_probability_max[i],
     }));
@@ -104,7 +113,7 @@ export async function getTodayData(city, lat, lon, ip) {
         time: shortTime, // Ini yang akan dipakai di UI (Hanya jam)
         // Samakan logika: Gunakan apparent_temperature jika ada
         temp: Math.round(hourly.apparent_temperature ? hourly.apparent_temperature[i] : hourly.temperature_2m[i]),
-        weather: wmoToLabel(hourly.weathercode[i]),
+        weather: wmoToLabel(hourly.weathercode[i], hourly.precipitation_probability[i]),
       });
     }
 
@@ -138,7 +147,7 @@ export async function getTodayData(city, lat, lon, ip) {
       current: {
         // Gunakan apparent_temperature jika tersedia agar lebih akurat dengan 'perasaan' user
         temperature: Math.round(current.apparent_temperature || current.temperature_2m),
-        weather: wmoToLabel(current.weathercode),
+        weather: wmoToLabel(current.weathercode, current.precipitation_probability),
         humidity: current.relative_humidity_2m,
         precipitation_probability: current.precipitation_probability,
       },
