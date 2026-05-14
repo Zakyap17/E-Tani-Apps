@@ -27,6 +27,7 @@ class _HomePageState extends State<HomePage> {
   String _temp = "--";
   String _weather = "Memuat...";
   String? _weatherAlert;
+  String? _systemNotice;
   String _gpsStatus = "Mencari GPS...";
 
   @override
@@ -90,7 +91,8 @@ class _HomePageState extends State<HomePage> {
           _temp = (data['current']?['temperature'] ?? "22").toString();
           _weather = data['current']?['weather'] ?? "Cerah";
           _currentCity = data['location'] ?? "Bandung";
-          _weatherAlert = data['alert']; // Simpan alert dari backend
+          _weatherAlert = data['alert'];
+          _systemNotice = data['system_notice']; // Ambil notifikasi sistem
         });
       }
     } catch (e) {
@@ -129,6 +131,8 @@ class _HomePageState extends State<HomePage> {
           children: [
             _buildHeroSection(),
             const SizedBox(height: 70), // Spacing for overlapping stats
+            
+            _buildSystemNotice(), // Banner Notifikasi Baru
             
             _buildAnalysisBanner(),
             const SizedBox(height: 30),
@@ -239,6 +243,43 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSystemNotice() {
+    if (_systemNotice == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      child: FadeSlideAnimation(
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppColors.secondary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.secondary.withOpacity(0.3)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, color: AppColors.secondary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _systemNotice!,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.secondary),
+                ),
+              ),
+              IconButton(
+                onPressed: () => setState(() => _systemNotice = null),
+                icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.secondary),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 

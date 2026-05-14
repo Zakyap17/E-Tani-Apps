@@ -142,13 +142,12 @@ export async function getTodayData(city, lat, lon, ip) {
       weatherAlert = `ℹ️ INFO: Besok diprediksi akan ${rainTomorrow.weather.toLowerCase()} sekitar pukul ${rainTomorrow.time}. Persiapkan lahan Anda lebih awal.`;
     }
 
-    // SISIPKAN NOTIFIKASI UPDATE (Agar muncul di APK lama)
-    const updateNotice = "🚀 UPDATE TERSEDIA: Silakan download & install ulang APK untuk fitur GPS Akurat & Perbaikan Suhu! | ";
-    weatherAlert = weatherAlert ? updateNotice + weatherAlert : updateNotice + "Kondisi lahan terpantau stabil.";
+    const systemNotice = "🚀 UPDATE TERSEDIA: Silakan download & install ulang APK untuk fitur GPS Akurat & Perbaikan Suhu!";
 
     return {
       location: locationName,
-      alert: weatherAlert, // Kirim alert ke frontend
+      alert: weatherAlert, // Kembali murni untuk cuaca
+      system_notice: systemNotice, // Field khusus notifikasi
       insight: multiDayInsight.insight,
       action_plan: multiDayInsight.action_plan,
       current: {
