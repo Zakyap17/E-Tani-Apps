@@ -96,9 +96,12 @@ export async function getTodayData(city, lat, lon, ip) {
     const hourlyForecast = [];
     for (let i = 0; i < 48; i++) {
       if (!hourly.time[i]) break;
+      const fullTime = hourly.time[i]; // 2026-05-14T18:00
+      const shortTime = fullTime.split('T')[1]; // 18:00
+      
       hourlyForecast.push({
-        time: hourly.time[i], // Format: 2026-05-14T18:00
-        labelTime: hourly.time[i].split('T')[1],
+        fullTime: fullTime,
+        time: shortTime, // Ini yang akan dipakai di UI (Hanya jam)
         temp: Math.round(hourly.temperature_2m[i]),
         weather: wmoToLabel(hourly.weathercode[i]),
       });
@@ -120,10 +123,10 @@ export async function getTodayData(city, lat, lon, ip) {
     const rainTomorrow = hourlyForecast.slice(24, 48).find(h => h.weather.includes('Hujan') || h.weather.includes('Badai'));
 
     if (rainToday) {
-      const timeLabel = parseInt(rainToday.labelTime.split(':')[0]) >= 18 ? "malam ini" : "hari ini";
-      weatherAlert = `⚠️ WASPADA: Diprediksi akan ${rainToday.weather.toLowerCase()} ${timeLabel} sekitar pukul ${rainToday.labelTime}.`;
+      const timeLabel = parseInt(rainToday.time.split(':')[0]) >= 18 ? "malam ini" : "hari ini";
+      weatherAlert = `⚠️ WASPADA: Diprediksi akan ${rainToday.weather.toLowerCase()} ${timeLabel} sekitar pukul ${rainToday.time}.`;
     } else if (rainTomorrow) {
-      weatherAlert = `ℹ️ INFO: Besok diprediksi akan ${rainTomorrow.weather.toLowerCase()} sekitar pukul ${rainTomorrow.labelTime}. Persiapkan lahan Anda lebih awal.`;
+      weatherAlert = `ℹ️ INFO: Besok diprediksi akan ${rainTomorrow.weather.toLowerCase()} sekitar pukul ${rainTomorrow.time}. Persiapkan lahan Anda lebih awal.`;
     }
 
     return {
