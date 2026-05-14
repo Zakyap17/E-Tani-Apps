@@ -49,7 +49,7 @@ class _FadeSlideAnimationState extends State<FadeSlideAnimation> with SingleTick
 
 class BouncingButton extends StatefulWidget {
   final Widget child;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const BouncingButton({super.key, required this.child, required this.onTap});
 
@@ -81,7 +81,7 @@ class _BouncingButtonState extends State<BouncingButton> with SingleTickerProvid
       onTapDown: (_) => _controller.forward(),
       onTapUp: (_) {
         _controller.reverse();
-        widget.onTap();
+        widget.onTap?.call();
       },
       onTapCancel: () => _controller.reverse(),
       child: ScaleTransition(
