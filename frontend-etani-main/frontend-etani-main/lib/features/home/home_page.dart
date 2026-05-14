@@ -23,9 +23,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _isLoadingWeather = true;
-  String _currentCity = "Bandung";
-  String _temp = "22";
-  String _weather = "Cerah";
+  String _currentCity = "Mencari Lokasi...";
+  String _temp = "--";
+  String _weather = "Memuat...";
 
   @override
   void initState() {
@@ -66,20 +66,26 @@ class _HomePageState extends State<HomePage> {
       if (latitude != null && longitude != null) {
         apiUrl += '?lat=$latitude&lon=$longitude';
       } else {
-        apiUrl += '?city=$_currentCity';
+        // Jika GPS gagal, tetap coba ambil data default tapi infokan ke user
+        apiUrl += '?city=Bandung';
       }
 
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _temp = data['current']['temperature']?.toString() ?? "22";
-          _weather = data['current']['weather'] ?? "Cerah";
+          _temp = (data['current']?['temperature'] ?? "22").toString();
+          _weather = data['current']?['weather'] ?? "Cerah";
+          // Jika backend mengembalikan nama lokasi, gunakan itu. Jika tidak, gunakan hasil geocoding atau default.
           _currentCity = data['location'] ?? _currentCity;
+          if (_currentCity == "Mencari Lokasi...") _currentCity = "Bandung";
         });
       }
     } catch (e) {
       debugPrint("Error weather: $e");
+      setState(() {
+        if (_currentCity == "Mencari Lokasi...") _currentCity = "Bandung";
+      });
     } finally {
       setState(() {
         _isLoadingWeather = false;
