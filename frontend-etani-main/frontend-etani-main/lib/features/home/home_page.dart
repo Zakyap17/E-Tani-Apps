@@ -12,6 +12,8 @@ import '../analysis/analysis.dart';
 import '../schedule/schedule_page.dart';
 import '../report/report_page.dart';
 
+import 'package:feetani/features/chat/chat_page.dart';
+
 class HomePage extends StatefulWidget {
   final Function(int)? onNavigate;
 
@@ -474,7 +476,7 @@ class _HomePageState extends State<HomePage> {
             delay: 500,
             child: BouncingButton(
               onTap: () {
-                // Nanti kita buat ChatPage
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatPage()));
               },
               child: Container(
                 width: double.infinity,
