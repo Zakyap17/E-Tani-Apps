@@ -240,7 +240,7 @@ class _HomePageState extends State<HomePage> {
             delay: 400,
             child: _isLoadingWeather 
                 ? const _LoadingStats()
-                : _StatsContainer(temp: _temp, weather: _weather, city: _currentCity),
+                : _StatsContainer(temp: _temp, weather: _weather, city: _currentCity, gpsStatus: _gpsStatus),
           ),
         ),
       ],
@@ -623,12 +623,6 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _StatItem(
-                label: city,
-                subLabel: _gpsStatus, // Menampilkan status GPS/IP
-                icon: Icons.location_on_rounded,
-                iconColor: Colors.redAccent,
-              ),
               Container(
                 width: 14,
                 height: 14,
@@ -743,8 +737,14 @@ class _StatsContainer extends StatelessWidget {
   final String temp;
   final String weather;
   final String city;
+  final String gpsStatus;
 
-  const _StatsContainer({required this.temp, required this.weather, required this.city});
+  const _StatsContainer({
+    required this.temp, 
+    required this.weather, 
+    required this.city,
+    required this.gpsStatus,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -764,7 +764,7 @@ class _StatsContainer extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildStatItem("Lokasi", city.length > 10 ? city.substring(0, 8) + '..' : city, Icons.location_on_rounded, Colors.redAccent),
+          _buildStatItem(gpsStatus, city.length > 10 ? city.substring(0, 8) + '..' : city, Icons.location_on_rounded, Colors.redAccent),
           Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
           _buildStatItem("Suhu", "$temp°C", Icons.thermostat_rounded, Colors.orange),
           Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
