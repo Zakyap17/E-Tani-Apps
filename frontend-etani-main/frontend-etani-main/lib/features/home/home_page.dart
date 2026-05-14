@@ -51,12 +51,13 @@ class _HomePageState extends State<HomePage> {
       if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
         setState(() => _gpsStatus = "Mengunci Sinyal...");
         
-        // Coba ambil posisi dengan timeout lebih lama
+        // Coba ambil posisi dengan timeout lebih lama dan paksa Android Manager
         Position? position;
         try {
           position = await Geolocator.getCurrentPosition(
             desiredAccuracy: LocationAccuracy.best,
-            timeLimit: const Duration(seconds: 15),
+            forceAndroidLocationManager: true, // Lebih akurat untuk beberapa HP Android
+            timeLimit: const Duration(seconds: 20),
           );
         } catch (e) {
           position = await Geolocator.getLastKnownPosition();
@@ -65,9 +66,9 @@ class _HomePageState extends State<HomePage> {
         if (position != null) {
           latitude = position.latitude;
           longitude = position.longitude;
-          setState(() => _gpsStatus = "GPS Terkunci");
+          setState(() => _gpsStatus = "Satelit GPS");
         } else {
-          setState(() => _gpsStatus = "GPS Gagal (IP)");
+          setState(() => _gpsStatus = "IP Internet");
         }
       } else {
         setState(() => _gpsStatus = "Izin Ditolak");
@@ -622,6 +623,12 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              _StatItem(
+                label: city,
+                subLabel: _gpsStatus, // Menampilkan status GPS/IP
+                icon: Icons.location_on_rounded,
+                iconColor: Colors.redAccent,
+              ),
               Container(
                 width: 14,
                 height: 14,

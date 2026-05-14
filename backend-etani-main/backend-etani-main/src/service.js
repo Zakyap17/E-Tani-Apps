@@ -151,11 +151,12 @@ export async function getTodayData(city, lat, lon, ip) {
       insight: multiDayInsight.insight,
       action_plan: multiDayInsight.action_plan,
       current: {
-        // Gunakan apparent_temperature jika tersedia agar lebih akurat dengan 'perasaan' user
-        temperature: Math.round(current.apparent_temperature || current.temperature_2m),
+        // Kembali ke Suhu Udara Asli agar sinkron dengan platform lain
+        temperature: Math.round(current.temperature_2m),
         weather: wmoToLabel(current.weathercode, current.precipitation_probability),
         humidity: current.relative_humidity_2m,
         precipitation_probability: current.precipitation_probability,
+        apparent_temperature: Math.round(current.apparent_temperature), // Simpan saja
       },
       recommendation: forecastArray[0].weather,
       forecast: forecastArray,
