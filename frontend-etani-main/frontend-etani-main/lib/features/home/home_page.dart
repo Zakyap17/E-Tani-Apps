@@ -26,6 +26,7 @@ class _HomePageState extends State<HomePage> {
   String _currentCity = "Mencari Lokasi...";
   String _temp = "--";
   String _weather = "Memuat...";
+  String? _weatherAlert;
 
   @override
   void initState() {
@@ -83,8 +84,8 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _temp = (data['current']?['temperature'] ?? "22").toString();
           _weather = data['current']?['weather'] ?? "Cerah";
-          // PRIORITAS: Gunakan nama lokasi dari backend
           _currentCity = data['location'] ?? "Bandung";
+          _weatherAlert = data['alert']; // Simpan alert dari backend
         });
       }
     } catch (e) {
@@ -237,6 +238,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildAnalysisBanner() {
+    // Jika tidak ada alert, kita tampilkan tips default atau sembunyikan
+    final hasAlert = _weatherAlert != null;
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: FadeSlideAnimation(
@@ -245,9 +249,9 @@ class _HomePageState extends State<HomePage> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF3E0), // Light orange warning
+            color: hasAlert ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9), 
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.orange.withOpacity(0.3)),
+            border: Border.all(color: hasAlert ? Colors.orange.withOpacity(0.3) : Colors.green.withOpacity(0.3)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,24 +259,31 @@ class _HomePageState extends State<HomePage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.2),
+                  color: hasAlert ? Colors.orange.withOpacity(0.2) : Colors.green.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                child: Icon(
+                  hasAlert ? Icons.warning_amber_rounded : Icons.eco_rounded, 
+                  color: hasAlert ? Colors.orange : Colors.green,
+                ),
               ),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Waspadai Risiko Jamur",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.orange),
+                      hasAlert ? "Peringatan Cuaca" : "Tips Lahan Hari Ini",
+                      style: TextStyle(
+                        fontSize: 18, 
+                        fontWeight: FontWeight.w800, 
+                        color: hasAlert ? Colors.orange : AppColors.primary
+                      ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
-                      "Hujan sedang hari ini meningkatkan kelembaban tanah. Pemberian fungisida sebanyak 3 kali diperlukan untuk mencegah pertumbuhan jamur.",
-                      style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.4),
+                      _weatherAlert ?? "Kondisi lahan terpantau stabil. Pastikan drainase tetap bersih untuk mengantisipasi perubahan cuaca mendadak.",
+                      style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.4),
                     ),
                   ],
                 ),

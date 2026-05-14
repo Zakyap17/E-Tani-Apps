@@ -102,8 +102,21 @@ export async function getTodayData(city, lat, lon, ip) {
 
     const multiDayInsight = generateMultiDayInsight(forecastArray);
 
+    // LOGIKA BARU: Deteksi Hujan dalam 1-3 jam ke depan
+    let weatherAlert = null;
+    const currentHour = new Date().getHours(); // Jam saat ini (0-23)
+    
+    // Cari hujan di 3 jam ke depan
+    const nextHours = hourlyForecast.slice(currentHour + 1, currentHour + 4);
+    const rainComing = nextHours.find(h => h.weather.includes('Hujan') || h.weather.includes('Badai'));
+
+    if (rainComing) {
+      weatherAlert = `Waspada! Diprediksi akan ${rainComing.weather.toLowerCase()} sekitar pukul ${rainComing.time}. Segera amankan peralatan atau hasil panen Anda.`;
+    }
+
     return {
       location: locationName,
+      alert: weatherAlert, // Kirim alert ke frontend
       insight: multiDayInsight.insight,
       action_plan: multiDayInsight.action_plan,
       current: {
