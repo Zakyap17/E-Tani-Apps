@@ -1,6 +1,19 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: etani-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=etani_user
+      - POSTGRES_PASSWORD=etani_pass_123
+      - POSTGRES_DB=etani_db
+    volumes:
+      - etani_pgdata:/var/lib/postgresql/data
+    networks:
+      - etani-network
+
   backend-api:
     build:
       context: ./backend-etani-main/backend-etani-main
@@ -11,11 +24,13 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DB_HOST=10.10.10.50
+      - DB_HOST=db
       - DB_USER=etani_user
       - DB_PASSWORD=etani_pass_123
       - DB_NAME=etani_db
-      - DB_PORT=5436
+      - DB_PORT=5432
+    depends_on:
+      - db
     networks:
       - etani-network
 
@@ -34,6 +49,9 @@ services:
       - backend-api
     networks:
       - etani-network
+
+volumes:
+  etani_pgdata:
 
 networks:
   etani-network:
