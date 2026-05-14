@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:feetani/core/constants/colors.dart';
 import 'package:feetani/core/widget/animated_ui.dart';
+import 'package:feetani/core/widget/skeleton_loader.dart';
 import 'package:feetani/features/report/report_page.dart';
 
 class ChatMessage {
@@ -129,16 +130,38 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
-              ),
-            ),
+            _buildSkeletonBubble(),
           _buildInputArea(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonBubble() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          ),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+          ],
+        ),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SkeletonLoader(width: 200, height: 14),
+            SizedBox(height: 8),
+            SkeletonLoader(width: 150, height: 14),
+          ],
+        ),
       ),
     );
   }

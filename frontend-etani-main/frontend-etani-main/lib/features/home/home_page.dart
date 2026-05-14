@@ -13,6 +13,7 @@ import '../schedule/schedule_page.dart';
 import '../report/report_page.dart';
 
 import 'package:feetani/features/chat/chat_page.dart';
+import 'package:feetani/core/widget/skeleton_loader.dart';
 
 class HomePage extends StatefulWidget {
   final Function(int)? onNavigate;
@@ -797,7 +798,35 @@ class _LoadingStats extends StatelessWidget {
           ),
         ],
       ),
-      child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SkeletonLoader(width: 30, height: 30, borderRadius: BorderRadius.all(Radius.circular(15))),
+              SizedBox(height: 8),
+              SkeletonLoader(width: 60, height: 12),
+            ],
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SkeletonLoader(width: 30, height: 30, borderRadius: BorderRadius.all(Radius.circular(15))),
+              SizedBox(height: 8),
+              SkeletonLoader(width: 60, height: 12),
+            ],
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SkeletonLoader(width: 30, height: 30, borderRadius: BorderRadius.all(Radius.circular(15))),
+              SizedBox(height: 8),
+              SkeletonLoader(width: 60, height: 12),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
