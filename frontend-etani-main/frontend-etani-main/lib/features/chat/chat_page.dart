@@ -161,7 +161,7 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15),
-                  child: Image.file(msg.image!, height: 200, width: double.infinity, fit: BoxCover.cover),
+                  child: Image.file(msg.image!, height: 200, width: double.infinity, fit: BoxFit.cover),
                 ),
               ),
             Container(
@@ -240,7 +240,7 @@ class _ChatPageState extends State<ChatPage> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.file(_selectedImage!, height: 80, width: 80, fit: BoxCover.cover),
+                    child: Image.file(_selectedImage!, height: 80, width: 80, fit: BoxFit.cover),
                   ),
                   Positioned(
                     right: 0,
