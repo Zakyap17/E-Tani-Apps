@@ -468,6 +468,70 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          // KARTU BARU: Tani-AI (Lebar Penuh agar menonjol)
+          FadeSlideAnimation(
+            delay: 500,
+            child: BouncingButton(
+              onTap: () {
+                // Nanti kita buat ChatPage
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6A1B9A), Color(0xFF9C27B0)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(50),
+                    bottomRight: Radius.circular(50),
+                    topRight: Radius.circular(16),
+                    bottomLeft: Radius.circular(16),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6A1B9A).withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 32),
+                    ),
+                    const SizedBox(width: 20),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Tanya Tani-AI",
+                            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "Konsultasi & Diagnosa Foto Tanaman",
+                            style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 18),
+                  ],
+                ),
+              ),
+            ),
+          ),
           // Tombol Download APK - hanya muncul di web browser
           if (kIsWeb) const SizedBox(height: 20),
           if (kIsWeb) _buildDownloadApkBanner(),
