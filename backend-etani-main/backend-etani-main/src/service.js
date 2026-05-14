@@ -92,11 +92,13 @@ export async function getTodayData(city, lat, lon, ip) {
       precipitation: daily.precipitation_probability_max[i],
     }));
 
-    // Generate 24 jam forecast (00:00 - 23:00)
+    // Generate 48 jam forecast (Hari ini & Besok) agar bisa mendeteksi hujan besok
     const hourlyForecast = [];
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 48; i++) {
+      if (!hourly.time[i]) break;
       hourlyForecast.push({
-        time: hourly.time[i].split('T')[1],
+        time: hourly.time[i], // Format: 2026-05-14T18:00
+        labelTime: hourly.time[i].split('T')[1],
         temp: Math.round(hourly.temperature_2m[i]),
         weather: wmoToLabel(hourly.weathercode[i]),
       });
@@ -104,16 +106,22 @@ export async function getTodayData(city, lat, lon, ip) {
 
     const multiDayInsight = generateMultiDayInsight(forecastArray);
 
-    // LOGIKA BARU: Deteksi Hujan dalam 1-3 jam ke depan
+    // LOGIKA BARU: Deteksi Hujan yang lebih detail (Hari ini vs Besok)
     let weatherAlert = null;
-    const currentHour = new Date().getHours(); // Jam saat ini (0-23)
+    const now = new Date();
+    const currentHour = now.getHours();
     
-    // Cari hujan di 3 jam ke depan
-    const nextHours = hourlyForecast.slice(currentHour + 1, currentHour + 4);
-    const rainComing = nextHours.find(h => h.weather.includes('Hujan') || h.weather.includes('Badai'));
+    // 1. Cari hujan di sisa hari ini
+    const rainToday = hourlyForecast.slice(currentHour + 1, 24).find(h => h.weather.includes('Hujan') || h.weather.includes('Badai'));
+    
+    // 2. Cari hujan besok (jam 24 sampai 48)
+    const rainTomorrow = hourlyForecast.slice(24, 48).find(h => h.weather.includes('Hujan') || h.weather.includes('Badai'));
 
-    if (rainComing) {
-      weatherAlert = `Waspada! Diprediksi akan ${rainComing.weather.toLowerCase()} sekitar pukul ${rainComing.time}. Segera amankan peralatan atau hasil panen Anda.`;
+    if (rainToday) {
+      const timeLabel = parseInt(rainToday.labelTime.split(':')[0]) >= 18 ? "malam ini" : "hari ini";
+      weatherAlert = `⚠️ WASPADA: Diprediksi akan ${rainToday.weather.toLowerCase()} ${timeLabel} sekitar pukul ${rainToday.labelTime}.`;
+    } else if (rainTomorrow) {
+      weatherAlert = `ℹ️ INFO: Besok diprediksi akan ${rainTomorrow.weather.toLowerCase()} sekitar pukul ${rainTomorrow.labelTime}. Persiapkan lahan Anda lebih awal.`;
     }
 
     return {
