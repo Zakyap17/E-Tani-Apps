@@ -393,7 +393,7 @@ class _HelpCallContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return BouncingButton(
       onTap: () async {
-        final uri = Uri.parse('tel:+6281234567890');
+        final uri = Uri.parse('mailto:etaniapps26@gmail.com?subject=Bantuan Darurat E-Tani');
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri);
         }
@@ -419,11 +419,11 @@ class _HelpCallContainer extends StatelessWidget {
                 children: [
                   const Text("Butuh Bantuan Darurat?", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
                   const SizedBox(height: 4),
-                  Text("Tap untuk hubungi tim ahli kami.", style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13, fontWeight: FontWeight.w500)),
+                  Text("etaniapps26@gmail.com", style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
-            const Icon(Icons.phone_rounded, color: Colors.white, size: 28),
+            const Icon(Icons.email_rounded, color: Colors.white, size: 28),
           ],
         ),
       ),
