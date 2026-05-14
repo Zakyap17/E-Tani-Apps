@@ -90,9 +90,9 @@ class _ChatPageState extends State<ChatPage> {
       setState(() {
         _isLoading = false;
         _messages.add(ChatMessage(
-          text: "Terima kasih informasinya, Juragan. Saya sedang menganalisis... (Fitur ini akan segera aktif sepenuhnya setelah integrasi Backend).",
+          text: "Mohon maaf Juragan, saat ini Tani-AI sedang dalam masa pelatihan intensif oleh Team Developer kami agar dapat memberikan diagnosa yang sangat akurat. Terima kasih atas antusiasnya, ditunggu ya kejutan di update selanjutnya! 🙏🚀",
           isUser: false,
-          showExpertButton: true, // Tampilkan tombol Hubungi Ahli jika AI selesai jawab
+          showExpertButton: true,
         ));
       });
       _scrollToBottom();
