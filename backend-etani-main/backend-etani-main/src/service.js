@@ -31,7 +31,9 @@ async function reverseGeocode(lat, lon) {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=id`;
     const response = await fetch(url, { headers: { 'User-Agent': 'e-Tani-App' } });
     const data = await response.json();
-    return data.address.city || data.address.town || data.address.village || data.address.county || 'Lokasi Terdeteksi';
+    const addr = data.address;
+    // Prioritaskan nama yang paling detail (Desa -> Kecamatan -> Kota)
+    return addr.village || addr.suburb || addr.city_district || addr.town || addr.city || 'Lokasi Terdeteksi';
   } catch (e) {
     return 'Lokasi Terdeteksi';
   }
@@ -72,7 +74,7 @@ export async function getTodayData(city, lat, lon, ip) {
     }
 
     // Ambil cuaca dari Open-Meteo (gratis, tanpa API key)
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,relative_humidity_2m,precipitation_probability&hourly=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,weathercode,relative_humidity_2m,precipitation_probability&hourly=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`;
 
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Open-Meteo error: ${response.status}`);
@@ -120,7 +122,8 @@ export async function getTodayData(city, lat, lon, ip) {
       insight: multiDayInsight.insight,
       action_plan: multiDayInsight.action_plan,
       current: {
-        temperature: Math.round(current.temperature_2m),
+        // Gunakan apparent_temperature jika tersedia agar lebih akurat dengan 'perasaan' user
+        temperature: Math.round(current.apparent_temperature || current.temperature_2m),
         weather: wmoToLabel(current.weathercode),
         humidity: current.relative_humidity_2m,
         precipitation_probability: current.precipitation_probability,
