@@ -507,7 +507,7 @@ class _HomePageState extends State<HomePage> {
                         color: Colors.white.withOpacity(0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 28),
+                      child: Image.asset('assets/images/tani_ai_icon.png', height: 40, width: 40),
                     ),
                     const SizedBox(width: 20),
                     const Expanded(
