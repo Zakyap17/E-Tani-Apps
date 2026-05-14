@@ -39,31 +39,47 @@ class _HomePageState extends State<HomePage> {
     double? longitude;
 
     try {
+      // 1. Pastikan Service GPS Nyala
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        debugPrint("Location services are disabled.");
+      }
+
+      // 2. Cek Izin
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
 
       if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-        // Gunakan akurasi tinggi agar sama dengan halaman Analisis
-        Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-        );
-        latitude = position.latitude;
-        longitude = position.longitude;
-
-        debugPrint("Home GPS: $latitude, $longitude");
-
-        // Reverse geocode hanya untuk nama kota di UI
+        // 3. Coba ambil posisi dengan timeout 10 detik
+        Position? position;
         try {
-          List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
-          if (placemarks.isNotEmpty) {
-            setState(() {
-              _currentCity = placemarks.first.locality ?? placemarks.first.subAdministrativeArea ?? "Lokasi Terdeteksi";
-            });
-          }
+          position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+            timeLimit: const Duration(seconds: 10),
+          );
         } catch (e) {
-          debugPrint("Geocoding error: $e");
+          // 4. Jika timeout, coba ambil posisi terakhir yang tersimpan di HP
+          position = await Geolocator.getLastKnownPosition();
+        }
+
+        if (position != null) {
+          latitude = position.latitude;
+          longitude = position.longitude;
+          debugPrint("Home GPS: $latitude, $longitude");
+
+          // Reverse geocode
+          try {
+            List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
+            if (placemarks.isNotEmpty) {
+              setState(() {
+                _currentCity = placemarks.first.locality ?? placemarks.first.subAdministrativeArea ?? "Lokasi Terdeteksi";
+              });
+            }
+          } catch (e) {
+            debugPrint("Geocoding error: $e");
+          }
         }
       }
     } catch (e) {

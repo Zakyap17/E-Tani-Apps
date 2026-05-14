@@ -108,11 +108,13 @@ export async function getTodayData(city, lat, lon, ip) {
 
     // LOGIKA BARU: Deteksi Hujan yang lebih detail (Hari ini vs Besok)
     let weatherAlert = null;
-    const now = new Date();
-    const currentHour = now.getHours();
     
-    // 1. Cari hujan di sisa hari ini
-    const rainToday = hourlyForecast.slice(currentHour + 1, 24).find(h => h.weather.includes('Hujan') || h.weather.includes('Badai'));
+    // Gunakan jam lokal dari data cuaca (Open-Meteo menyediakan waktu lokal di 'current.time')
+    const localTimeStr = data.current.time; // Format: 2026-05-14T19:00
+    const localHour = parseInt(localTimeStr.split('T')[1].split(':')[0]);
+    
+    // 1. Cari hujan di sisa hari ini (menggunakan jam lokal lokasi tersebut)
+    const rainToday = hourlyForecast.slice(localHour + 1, 24).find(h => h.weather.includes('Hujan') || h.weather.includes('Badai'));
     
     // 2. Cari hujan besok (jam 24 sampai 48)
     const rainTomorrow = hourlyForecast.slice(24, 48).find(h => h.weather.includes('Hujan') || h.weather.includes('Badai'));
