@@ -90,7 +90,7 @@ class _ChatPageState extends State<ChatPage> {
       setState(() {
         _isLoading = false;
         _messages.add(ChatMessage(
-          text: "Mohon maaf Juragan, saat ini Tani-AI sedang dalam masa pelatihan intensif oleh Team Developer kami agar dapat memberikan diagnosa yang sangat akurat. Terima kasih atas antusiasnya, ditunggu ya kejutan di update selanjutnya! 🙏🚀",
+          text: "Mohon maaf Juragan, saat ini Tani-AI sedang dalam masa pengembangan intensif oleh Team Developer kami agar dapat memberikan diagnosa yang sangat akurat. Terima kasih atas antusiasnya, ditunggu ya kejutan di update selanjutnya! 🙏🚀",
           isUser: false,
           showExpertButton: true,
         ));
