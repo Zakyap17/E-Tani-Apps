@@ -32,6 +32,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
   double? _lat;
   double? _lon;
   List<dynamic> _hourlyData = [];
+  final ScrollController _hourlyScrollController = ScrollController();
 
   @override
   void initState() {
@@ -45,6 +46,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
   @override
   void dispose() {
     _lokasiCtrl.dispose();
+    _hourlyScrollController.dispose();
     super.dispose();
   }
 
@@ -96,6 +98,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
             _rainChance = (current['precipitation_probability'] ?? '20').toString();
             _hourlyData = data['hourly'] ?? [];
           });
+          // Scroll ke jam sekarang setelah data dimuat
+          _scrollToCurrentHour();
         }
       }
     } catch (e) {
@@ -108,6 +112,21 @@ class _AnalysisPageState extends State<AnalysisPage> {
     } finally {
       setState(() => _isLoadingWeather = false);
     }
+  }
+
+  void _scrollToCurrentHour() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentHour = DateTime.now().hour;
+      // Setiap item 80px lebar + 16px separator = 96px
+      final offset = (currentHour * 96.0) - 24.0;
+      if (_hourlyScrollController.hasClients) {
+        _hourlyScrollController.animateTo(
+          offset.clamp(0.0, _hourlyScrollController.position.maxScrollExtent),
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   void _submitForm() {
@@ -430,6 +449,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
   }
 
   Widget _buildHourlyForecastCard() {
+    final currentHour = DateTime.now().hour;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -447,6 +467,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
         SizedBox(
           height: 140,
           child: ListView.separated(
+            controller: _hourlyScrollController,
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -455,11 +476,14 @@ class _AnalysisPageState extends State<AnalysisPage> {
             separatorBuilder: (context, index) => const SizedBox(width: 16),
             itemBuilder: (context, index) {
               final item = _hourlyData[index];
+              // Format jam: "15:00" → ambil jam (15) lalu bandingkan
+              final itemHour = int.tryParse((item['time'] ?? '00:00').split(':')[0]) ?? -1;
+              final isCurrentHour = itemHour == currentHour;
               return _buildHourlyItem(
                 item['time'] ?? "--:--",
                 _getWeatherIcon(item['weather'] ?? ""),
                 "${item['temp']}°",
-                index == 0,
+                isCurrentHour,
                 450 + (index * 50),
               );
             },
