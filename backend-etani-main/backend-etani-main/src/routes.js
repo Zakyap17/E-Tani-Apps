@@ -17,7 +17,8 @@ router.get('/today', async (req, res) => {
     const city = req.query.city;
     const lat = req.query.lat ? parseFloat(req.query.lat) : null;
     const lon = req.query.lon ? parseFloat(req.query.lon) : null;
-    const data = await getTodayData(city, lat, lon);
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const data = await getTodayData(city, lat, lon, ip);
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error' });

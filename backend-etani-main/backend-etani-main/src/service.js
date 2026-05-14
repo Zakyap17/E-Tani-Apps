@@ -37,17 +37,34 @@ async function reverseGeocode(lat, lon) {
   }
 }
 
-export async function getTodayData(city, lat, lon) {
+export async function getTodayData(city, lat, lon, ip) {
   let locationName = city || 'Bandung';
   let latitude = lat;
   let longitude = lon;
 
   try {
-    // Jika lat/lon tersedia, cari nama kotanya
+    // 1. Jika ada GPS, gunakan GPS
     if (latitude && longitude) {
       locationName = await reverseGeocode(latitude, longitude);
-    } else {
-      // Jika hanya nama kota, cari koordinatnya
+    } 
+    // 2. Jika GPS tidak ada, coba deteksi via IP (Baru!)
+    else if (!city && ip) {
+      try {
+        const ipGeoUrl = `http://ip-api.com/json/${ip}?fields=status,city,lat,lon`;
+        const ipRes = await fetch(ipGeoUrl);
+        const ipData = await ipRes.json();
+        if (ipData.status === 'success') {
+          latitude = ipData.lat;
+          longitude = ipData.lon;
+          locationName = ipData.city;
+        }
+      } catch (e) {
+        console.error("IP Geolocation error: " + e.message);
+      }
+    }
+
+    // 3. Jika masih belum ada koordinat, gunakan geocode nama kota (default Bandung)
+    if (!latitude || !longitude) {
       const geo = await geocodeCity(locationName);
       latitude = geo.lat;
       longitude = geo.lon;

@@ -74,10 +74,8 @@ class _HomePageState extends State<HomePage> {
       String apiUrl = '${ApiConstants.baseUrl}/today';
       if (latitude != null && longitude != null) {
         apiUrl += '?lat=$latitude&lon=$longitude';
-      } else {
-        // Jika GPS gagal, tetap coba ambil data default tapi infokan ke user
-        apiUrl += '?city=Bandung';
       }
+      // Jika GPS null, kita biarkan Backend mendeteksi via IP (tidak kirim ?city=Bandung)
 
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
