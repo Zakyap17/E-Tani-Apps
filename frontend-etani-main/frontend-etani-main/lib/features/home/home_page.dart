@@ -44,20 +44,29 @@ class _HomePageState extends State<HomePage> {
       }
 
       if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-        Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
+        // Gunakan akurasi tinggi agar sama dengan halaman Analisis
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
         latitude = position.latitude;
         longitude = position.longitude;
 
+        debugPrint("Home GPS: $latitude, $longitude");
+
         // Reverse geocode hanya untuk nama kota di UI
-        List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
-        if (placemarks.isNotEmpty) {
-          setState(() {
-            _currentCity = placemarks.first.locality ?? placemarks.first.subAdministrativeArea ?? "Bandung";
-          });
+        try {
+          List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
+          if (placemarks.isNotEmpty) {
+            setState(() {
+              _currentCity = placemarks.first.locality ?? placemarks.first.subAdministrativeArea ?? "Lokasi Terdeteksi";
+            });
+          }
+        } catch (e) {
+          debugPrint("Geocoding error: $e");
         }
       }
     } catch (e) {
-      debugPrint("Error location: $e");
+      debugPrint("Error location fetching: $e");
     }
 
     try {
