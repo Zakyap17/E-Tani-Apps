@@ -298,7 +298,7 @@ class _ReportPageState extends State<ReportPage> {
             FadeSlideAnimation(
               delay: 600,
               child: BouncingButton(
-                onTap: _isSubmitting ? null : _submitReport,
+                onTap: _isSubmitting ? null : () => _submitReport(),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 18),
