@@ -253,31 +253,34 @@ class _HomePageState extends State<HomePage> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
       child: FadeSlideAnimation(
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppColors.secondary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.secondary.withOpacity(0.3)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.info_outline_rounded, color: AppColors.secondary, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  _systemNotice!,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.secondary),
+        child: GestureDetector(
+          onTap: () {
+            // Arahkan ke link download APK dan hapus banner
+            const downloadUrl = "http://100.120.62.122/downloads/E-Tani.apk";
+            launchUrl(Uri.parse(downloadUrl));
+            setState(() => _systemNotice = null);
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.secondary.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.download_for_offline_rounded, color: AppColors.secondary, size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _systemNotice!,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.secondary),
+                  ),
                 ),
-              ),
-              IconButton(
-                onPressed: () => setState(() => _systemNotice = null),
-                icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.secondary),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              )
-            ],
+                const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.secondary),
+              ],
+            ),
           ),
         ),
       ),
