@@ -82,6 +82,9 @@ export async function getTodayData(city, lat, lon, ip) {
       locationName = geo.name;
     }
 
+    console.log(`[Weather Request] Loc: ${locationName}, Lat: ${latitude}, Lon: ${longitude}, IP: ${ip}`);
+
+
     // Ambil cuaca dari Open-Meteo (gratis, tanpa API key)
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,weathercode,relative_humidity_2m,precipitation_probability&hourly=temperature_2m,apparent_temperature,weathercode,precipitation_probability&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`;
 
@@ -138,6 +141,10 @@ export async function getTodayData(city, lat, lon, ip) {
     } else if (rainTomorrow) {
       weatherAlert = `ℹ️ INFO: Besok diprediksi akan ${rainTomorrow.weather.toLowerCase()} sekitar pukul ${rainTomorrow.time}. Persiapkan lahan Anda lebih awal.`;
     }
+
+    // SISIPKAN NOTIFIKASI UPDATE (Agar muncul di APK lama)
+    const updateNotice = "🚀 UPDATE TERSEDIA: Silakan download & install ulang APK untuk fitur GPS Akurat & Perbaikan Suhu! | ";
+    weatherAlert = weatherAlert ? updateNotice + weatherAlert : updateNotice + "Kondisi lahan terpantau stabil.";
 
     return {
       location: locationName,
