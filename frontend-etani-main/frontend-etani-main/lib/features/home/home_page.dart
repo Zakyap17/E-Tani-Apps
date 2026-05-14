@@ -507,7 +507,7 @@ class _HomePageState extends State<HomePage> {
                         color: Colors.white.withOpacity(0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 32),
+                      child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 32),
                     ),
                     const SizedBox(width: 20),
                     const Expanded(
