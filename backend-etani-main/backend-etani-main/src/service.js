@@ -74,7 +74,7 @@ export async function getTodayData(city, lat, lon, ip) {
     }
 
     // Ambil cuaca dari Open-Meteo (gratis, tanpa API key)
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,weathercode,relative_humidity_2m,precipitation_probability&hourly=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,weathercode,relative_humidity_2m,precipitation_probability&hourly=temperature_2m,apparent_temperature,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`;
 
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Open-Meteo error: ${response.status}`);
@@ -102,7 +102,8 @@ export async function getTodayData(city, lat, lon, ip) {
       hourlyForecast.push({
         fullTime: fullTime,
         time: shortTime, // Ini yang akan dipakai di UI (Hanya jam)
-        temp: Math.round(hourly.temperature_2m[i]),
+        // Samakan logika: Gunakan apparent_temperature jika ada
+        temp: Math.round(hourly.apparent_temperature ? hourly.apparent_temperature[i] : hourly.temperature_2m[i]),
         weather: wmoToLabel(hourly.weathercode[i]),
       });
     }
