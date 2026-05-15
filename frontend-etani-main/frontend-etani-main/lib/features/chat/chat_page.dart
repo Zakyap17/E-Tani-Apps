@@ -57,13 +57,75 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? image = await _picker.pickImage(
+      source: source,
+      imageQuality: 50, // Auto-compress ke 50% (Sangat ideal untuk AI & hemat data)
+      maxWidth: 1024,   // Batasi lebar agar tidak terlalu besar
+    );
     if (image != null) {
       setState(() {
         _selectedImage = File(image.path);
       });
     }
+  }
+
+  void _showPickerMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+            ),
+            const Text("Kirim Foto Tanaman", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildPickerOption(Icons.camera_alt_rounded, "Kamera", ImageSource.camera),
+                _buildPickerOption(Icons.image_rounded, "Galeri", ImageSource.gallery),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPickerOption(IconData icon, String label, ImageSource source) {
+    return BouncingButton(
+      onTap: () {
+        Navigator.pop(context);
+        _pickImage(source);
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 30),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textDark)),
+        ],
+      ),
+    );
   }
 
   Future<void> _sendMessage() async {
@@ -283,11 +345,11 @@ class _ChatPageState extends State<ChatPage> {
           Row(
             children: [
               BouncingButton(
-                onTap: _pickImage,
+                onTap: _showPickerMenu,
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
-                  child: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+                  child: const Icon(Icons.add_rounded, color: AppColors.primary),
                 ),
               ),
               const SizedBox(width: 12),
