@@ -100,7 +100,7 @@ class _ChatPageState extends State<ChatPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildPickerOption(Icons.camera_alt_rounded, "Kamera", ImageSource.camera),
-                _buildPickerOption(Icons.collections_rounded, "Galeri", ImageSource.gallery),
+                _buildPickerOption(Icons.image, "Galeri", ImageSource.gallery),
               ],
             ),
             const SizedBox(height: 20),
