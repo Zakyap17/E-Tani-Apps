@@ -1,5 +1,4 @@
 import { generateMultiDayInsight } from './classifier.js';
-import { generateDailyActivities } from './aiService.js';
 
 // WMO Weather Code to Indonesian label (More Precise)
 function wmoToLabel(code, probability = 0) {
@@ -145,15 +144,78 @@ export async function getTodayData(city, lat, lon, ip) {
 
     const systemNotice = "🚀 TANI-AI TELAH HADIR: Update APK sekarang untuk fitur Konsultasi AI & Analisis Cuaca Real-time!";
 
-    // GENERATE DYNAMIC ACTIVITIES VIA AI
-    const weatherText = `Lokasi: ${locationName}, Cuaca: ${current.weather}, Suhu: ${current.temperature_2m}°C, Alert: ${weatherAlert || "Tidak ada"}`;
-    const activities = await generateDailyActivities(weatherText, locationName);
+    // LOGIKA MANUAL "OTAK TANI" (Anti-Limit & Akurat)
+    const generateManualActivities = () => {
+      const activities = [];
+      
+      // 1. Logika Penyiraman
+      if (rainToday) {
+        activities.push({
+          title: "Siram Tanaman",
+          time: "Dilewati",
+          desc: `Hujan pukul ${rainToday.time} akan mencukupi kebutuhan air lahan.`,
+          iconType: "water"
+        });
+      } else if (current.temperature_2m > 32) {
+        activities.push({
+          title: "Siram Tanaman",
+          time: "Ekstra (07:00 & 16:00)",
+          desc: "Suhu sangat panas, berikan air ekstra agar tanaman tidak layu.",
+          iconType: "water"
+        });
+      } else {
+        activities.push({
+          title: "Siram Tanaman",
+          time: "07:00 & 16:00",
+          desc: "Lakukan penyiraman rutin untuk menjaga kelembaban tanah.",
+          iconType: "water"
+        });
+      }
+
+      // 2. Logika Pemupukan
+      if (rainToday && parseInt(rainToday.time.split(':')[0]) < 15) {
+        activities.push({
+          title: "Beri Pupuk",
+          time: "Tunda",
+          desc: "Ada potensi hujan siang ini, tunda pemupukan agar tidak hanyut.",
+          iconType: "leaf"
+        });
+      } else {
+        activities.push({
+          title: "Beri Pupuk",
+          time: "08:00 (Pagi)",
+          desc: "Waktu terbaik untuk penyerapan nutrisi oleh akar tanaman.",
+          iconType: "leaf"
+        });
+      }
+
+      // 3. Logika Proteksi (Fungisida/Hama)
+      if (current.relative_humidity_2m > 80) {
+        activities.push({
+          title: "Proteksi Tanaman",
+          time: "Wajib (Pagi)",
+          desc: "Kelembaban sangat tinggi, waspadai serangan jamur dan bakteri.",
+          iconType: "bug"
+        });
+      } else {
+        activities.push({
+          title: "Proteksi Tanaman",
+          time: "Pantau Berkala",
+          desc: "Kondisi stabil, lakukan pemantauan rutin pada daun tanaman.",
+          iconType: "bug"
+        });
+      }
+
+      return activities;
+    };
+
+    const activities = generateManualActivities();
 
     return {
       location: locationName,
       alert: weatherAlert, 
       system_notice: systemNotice, 
-      activities: activities, // MASUKKAN KE RESPONSE
+      activities: activities, 
       insight: multiDayInsight.insight,
       action_plan: multiDayInsight.action_plan,
       current: {
