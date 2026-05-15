@@ -82,15 +82,20 @@ export async function generateDailyActivities(weatherContext) {
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    // Bersihkan jika ada markdown code block
-    const cleanedJson = text.replace(/```json|```/g, "").trim();
+    
+    // REGEX MAGIC: Cari bagian yang beneran JSON Array [ ... ]
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error("AI did not return a valid JSON array");
+    
+    const cleanedJson = jsonMatch[0].trim();
     return JSON.parse(cleanedJson);
   } catch (error) {
-    console.error("AI Activities Error:", error);
+    console.error("AI Activities Error:", error.message);
+    // Fallback yang sedikit lebih bervariasi jika AI gagal (agar tidak bosan)
     return [
-      { "title": "Cek Kondisi Lahan", "time": "07:00", "desc": "Pantau kesehatan tanaman secara menyeluruh.", "iconType": "leaf" },
-      { "title": "Manajemen Air", "time": "08:00", "desc": "Sesuaikan penyiraman dengan kondisi cuaca.", "iconType": "water" },
-      { "title": "Kebersihan Area", "time": "16:00", "desc": "Pastikan lingkungan lahan bersih dari gulma.", "iconType": "sun" }
+      { "title": "Pantau Lahan", "time": "06:30", "desc": "Cek embun dan tanda awal jamur di daun.", "iconType": "leaf" },
+      { "title": "Nutrisi Tanaman", "time": "08:00", "desc": "Berikan asupan nutrisi sesuai jadwal fase.", "iconType": "sun" },
+      { "title": "Sanitasi Lahan", "time": "16:30", "desc": "Bersihkan gulma yang mulai mengganggu.", "iconType": "bug" }
     ];
   }
 }
