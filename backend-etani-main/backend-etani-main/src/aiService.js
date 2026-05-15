@@ -53,7 +53,12 @@ export async function askTaniAI(prompt, imageBuffer = null, mimeType = null, wea
     const response = await result.response;
     return response.text();
   } catch (error) {
-    console.error("AI Error:", error);
-    return `Waduh Juragan, ada error teknis dari Google: ${error.message}. Coba kabari Team Developer ya!`;
+    console.error("AI Error:", error.message);
+    
+    if (error.message.includes("429") || error.message.toLowerCase().includes("quota")) {
+      return "Mohon maaf Juragan, Tani-AI sedang menerima banyak pertanyaan saat ini. Mohon tunggu sekitar 30-60 detik ya sebelum bertanya kembali agar saya bisa menyiapkan jawaban terbaik. Terima kasih atas kesabarannya! 🙏";
+    }
+
+    return "Waduh Juragan, sepertinya Tani-AI sedang sedikit lelah. Coba kirim ulang pertanyaannya dalam beberapa saat lagi ya! 🙏";
   }
 }
