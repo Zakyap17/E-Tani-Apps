@@ -629,7 +629,7 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(height: 24),
         SizedBox(
-          height: 185,
+          height: 210, // Tingkatkan tinggi agar teks lebih leluasa
           child: _activities.isEmpty 
             ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
             : ListView.builder(
@@ -641,7 +641,6 @@ class _HomePageState extends State<HomePage> {
                 itemBuilder: (context, index) {
                   final activity = _activities[index];
                   
-                  // Tentukan warna & icon berdasarkan tipe dari AI
                   Color iconColor = AppColors.primary;
                   if (activity['iconType'] == 'water') iconColor = Colors.blue;
                   if (activity['iconType'] == 'sun') iconColor = Colors.orange;
@@ -668,7 +667,37 @@ class _HomePageState extends State<HomePage> {
     return FadeSlideAnimation(
       delay: delay,
       child: BouncingButton(
-        onTap: () {},
+        onTap: () {
+          // Tampilkan Detail Lengkap saat diklik
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: color),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w800))),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(status, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 12),
+                  Text(note, style: const TextStyle(fontSize: 14, height: 1.5, color: Colors.black87)),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Mengerti", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                )
+              ],
+            ),
+          );
+        },
         child: Container(
           width: 160,
           padding: const EdgeInsets.all(20),
@@ -709,7 +738,12 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 8),
                   Text(status, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
-                  Text(note, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w600)),
+                  Text(
+                    note, 
+                    maxLines: 4, // Tingkatkan sedikit batas baris di kartu
+                    overflow: TextOverflow.ellipsis, 
+                    style: const TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w600)
+                  ),
                 ],
               ),
             ],
