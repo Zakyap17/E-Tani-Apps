@@ -417,11 +417,13 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                   child: TextField(
                     controller: _controller,
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
                     decoration: const InputDecoration(
                       hintText: "Tanya sesuatu...",
                       border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 10),
                     ),
-                    onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
               ),
