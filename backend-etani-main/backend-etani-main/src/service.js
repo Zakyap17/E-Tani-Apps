@@ -142,7 +142,7 @@ export async function getTodayData(city, lat, lon, ip) {
       weatherAlert = `ℹ️ INFO: Besok diprediksi akan ${rainTomorrow.weather.toLowerCase()} sekitar pukul ${rainTomorrow.time}. Persiapkan lahan Anda lebih awal.`;
     }
 
-    const systemNotice = "🚀 TANI-AI TELAH HADIR: Update APK sekarang untuk fitur Konsultasi AI & Analisis Cuaca Real-time!";
+    const systemNotice = "🔥 UPDATE VERSI 1.2.0: Kini hadir fitur 'Zoom Font' & Saran Kegiatan Otomatis yang lebih akurat. Update APK sekarang!";
 
     // LOGIKA MANUAL "OTAK TANI" V2 (Lebih Detail & Komprehensif)
     const generateManualActivities = () => {
