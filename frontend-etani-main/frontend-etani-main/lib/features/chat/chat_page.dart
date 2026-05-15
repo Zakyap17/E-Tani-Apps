@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:feetani/core/constants/colors.dart';
 import 'package:feetani/core/constants/api_constants.dart';
 import 'package:feetani/core/widget/animated_ui.dart';
@@ -13,7 +15,7 @@ import 'package:feetani/features/report/report_page.dart';
 class ChatMessage {
   final String text;
   final bool isUser;
-  final File? image;
+  final XFile? image;
   final bool showExpertButton;
 
   ChatMessage({
@@ -36,7 +38,7 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
-  File? _selectedImage;
+  XFile? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -68,7 +70,7 @@ class _ChatPageState extends State<ChatPage> {
     );
     if (image != null) {
       setState(() {
-        _selectedImage = File(image.path);
+        _selectedImage = image;
       });
     }
   }
@@ -98,7 +100,7 @@ class _ChatPageState extends State<ChatPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildPickerOption(Icons.camera_alt_rounded, "Kamera", ImageSource.camera),
-                _buildPickerOption(Icons.image_rounded, "Galeri", ImageSource.gallery),
+                _buildPickerOption(Icons.photo_library_rounded, "Galeri", ImageSource.gallery),
               ],
             ),
             const SizedBox(height: 20),
@@ -170,7 +172,13 @@ class _ChatPageState extends State<ChatPage> {
       if (lon != null) request.fields['lon'] = lon.toString();
       
       if (currentImage != null) {
-        request.files.add(await http.MultipartFile.fromPath('image', currentImage.path));
+        final bytes = await currentImage.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes(
+          'image',
+          bytes,
+          filename: 'image.jpg',
+          contentType: MediaType('image', 'jpeg'),
+        ));
       }
 
       var streamedResponse = await request.send().timeout(const Duration(seconds: 60));
@@ -289,7 +297,9 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15),
-                  child: Image.file(msg.image!, height: 200, width: double.infinity, fit: BoxFit.cover),
+                  child: kIsWeb 
+                    ? Image.network(msg.image!.path, height: 200, width: double.infinity, fit: BoxFit.cover)
+                    : Image.file(File(msg.image!.path), height: 200, width: double.infinity, fit: BoxFit.cover),
                 ),
               ),
             Container(
@@ -368,7 +378,9 @@ class _ChatPageState extends State<ChatPage> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.file(_selectedImage!, height: 80, width: 80, fit: BoxFit.cover),
+                    child: kIsWeb
+                      ? Image.network(_selectedImage!.path, height: 80, width: 80, fit: BoxFit.cover)
+                      : Image.file(File(_selectedImage!.path), height: 80, width: 80, fit: BoxFit.cover),
                   ),
                   Positioned(
                     right: 0,
