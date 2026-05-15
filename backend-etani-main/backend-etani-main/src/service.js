@@ -144,67 +144,94 @@ export async function getTodayData(city, lat, lon, ip) {
 
     const systemNotice = "🚀 TANI-AI TELAH HADIR: Update APK sekarang untuk fitur Konsultasi AI & Analisis Cuaca Real-time!";
 
-    // LOGIKA MANUAL "OTAK TANI" (Anti-Limit & Akurat)
+    // LOGIKA MANUAL "OTAK TANI" V2 (Lebih Detail & Komprehensif)
     const generateManualActivities = () => {
       const activities = [];
+      const temp = current.temperature_2m;
+      const humidity = current.relative_humidity_2m;
       
-      // 1. Logika Penyiraman
+      // 1. LOGIKA PENYIRAMAN
       if (rainToday) {
         activities.push({
           title: "Siram Tanaman",
           time: "Dilewati",
-          desc: `Hujan pukul ${rainToday.time} akan mencukupi kebutuhan air lahan.`,
+          desc: `Hujan diprediksi pukul ${rainToday.time}. Kebutuhan air sudah tercukupi secara alami.`,
           iconType: "water"
         });
-      } else if (current.temperature_2m > 32) {
+      } else if (temp > 32) {
         activities.push({
           title: "Siram Tanaman",
-          time: "Ekstra (07:00 & 16:00)",
-          desc: "Suhu sangat panas, berikan air ekstra agar tanaman tidak layu.",
+          time: "Ekstra (Pagi & Sore)",
+          desc: `Suhu mencapai ${Math.round(temp)}°C. Tanaman butuh air ekstra untuk cegah penguapan berlebih.`,
           iconType: "water"
         });
       } else {
         activities.push({
           title: "Siram Tanaman",
-          time: "07:00 & 16:00",
-          desc: "Lakukan penyiraman rutin untuk menjaga kelembaban tanah.",
+          time: "07:00 & 16:30",
+          desc: "Lakukan penyiraman rutin untuk menjaga kelembaban akar tanaman.",
           iconType: "water"
         });
       }
 
-      // 2. Logika Pemupukan
-      if (rainToday && parseInt(rainToday.time.split(':')[0]) < 15) {
+      // 2. LOGIKA PEMUPUKAN
+      if (rainToday && parseInt(rainToday.time.split(':')[0]) < 16) {
         activities.push({
           title: "Beri Pupuk",
           time: "Tunda",
-          desc: "Ada potensi hujan siang ini, tunda pemupukan agar tidak hanyut.",
+          desc: "Risiko hanyut terbawa air hujan siang ini. Sebaiknya tunda hingga cuaca stabil.",
           iconType: "leaf"
         });
       } else {
         activities.push({
           title: "Beri Pupuk",
-          time: "08:00 (Pagi)",
-          desc: "Waktu terbaik untuk penyerapan nutrisi oleh akar tanaman.",
+          time: "08:00 (Fase Aktif)",
+          desc: "Waktu optimal penyerapan nutrisi. Fokus pada tanaman yang sedang masa pertumbuhan.",
           iconType: "leaf"
         });
       }
 
-      // 3. Logika Proteksi (Fungisida/Hama)
-      if (current.relative_humidity_2m > 80) {
+      // 3. LOGIKA PROTEKSI (PENYAKIT/JAMUR)
+      if (humidity > 75) {
         activities.push({
-          title: "Proteksi Tanaman",
+          title: "Cek Gejala Jamur",
           time: "Wajib (Pagi)",
-          desc: "Kelembaban sangat tinggi, waspadai serangan jamur dan bakteri.",
+          desc: `Kelembaban tinggi (${humidity}%). Periksa bagian bawah daun untuk tanda bercak atau jamur.`,
           iconType: "bug"
         });
       } else {
         activities.push({
-          title: "Proteksi Tanaman",
-          time: "Pantau Berkala",
-          desc: "Kondisi stabil, lakukan pemantauan rutin pada daun tanaman.",
+          title: "Monitoring Hama",
+          time: "Siang Hari",
+          desc: "Cuaca relatif kering. Waspadai serangan kutu daun atau ulat penggerek di pucuk.",
           iconType: "bug"
         });
       }
+
+      // 4. LOGIKA DRAINASE & LAHAN
+      if (rainToday && rainToday.weather.toLowerCase().includes('lebat')) {
+        activities.push({
+          title: "Drainase Lahan",
+          time: "Pasca Hujan",
+          desc: "Hujan lebat diprediksi. Pastikan saluran pembuangan lancar agar tidak ada genangan.",
+          iconType: "water"
+        });
+      } else if (humidity < 60) {
+        activities.push({
+          title: "Sanitasi Lahan",
+          time: "Sore Hari",
+          desc: "Tanah dalam kondisi ideal untuk pembersihan gulma di sekitar bedengan.",
+          iconType: "sun"
+        });
+      }
+
+      // 5. MONITORING UMUM (SELALU ADA)
+      activities.push({
+        title: "Evaluasi Tanaman",
+        time: "17:00",
+        desc: "Catat perkembangan tanaman dan siapkan rencana kerja untuk besok pagi.",
+        iconType: "leaf"
+      });
 
       return activities;
     };
