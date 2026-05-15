@@ -62,3 +62,35 @@ export async function askTaniAI(prompt, imageBuffer = null, mimeType = null, wea
     return "Waduh Juragan, sepertinya Tani-AI sedang sedikit lelah. Coba kirim ulang pertanyaannya dalam beberapa saat lagi ya! 🙏";
   }
 }
+
+export async function generateDailyActivities(weatherContext) {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    
+    const prompt = `
+      Anda adalah pakar agronomi S2. Berdasarkan data cuaca berikut:
+      ${weatherContext}
+      
+      Buatlah 3 rencana kegiatan pertanian paling strategis untuk Juragan hari ini.
+      Format harus JSON array murni tanpa markdown:
+      [
+        {"title": "Judul Singkat", "time": "Waktu (misal: 07:00)", "desc": "Penjelasan singkat taktis", "iconType": "water/sun/bug/leaf"},
+        ...
+      ]
+      PENTING: Jangan gunakan bintang (**) atau markdown. Hanya JSON.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    // Bersihkan jika ada markdown code block
+    const cleanedJson = text.replace(/```json|```/g, "").trim();
+    return JSON.parse(cleanedJson);
+  } catch (error) {
+    console.error("AI Activities Error:", error);
+    return [
+      { "title": "Cek Kondisi Lahan", "time": "07:00", "desc": "Pantau kesehatan tanaman secara menyeluruh.", "iconType": "leaf" },
+      { "title": "Manajemen Air", "time": "08:00", "desc": "Sesuaikan penyiraman dengan kondisi cuaca.", "iconType": "water" },
+      { "title": "Kebersihan Area", "time": "16:00", "desc": "Pastikan lingkungan lahan bersih dari gulma.", "iconType": "sun" }
+    ];
+  }
+}

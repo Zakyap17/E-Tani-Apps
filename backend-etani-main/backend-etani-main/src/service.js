@@ -1,4 +1,5 @@
 import { generateMultiDayInsight } from './classifier.js';
+import { generateDailyActivities } from './aiService.js';
 
 // WMO Weather Code to Indonesian label (More Precise)
 function wmoToLabel(code, probability = 0) {
@@ -144,10 +145,15 @@ export async function getTodayData(city, lat, lon, ip) {
 
     const systemNotice = "🚀 TANI-AI TELAH HADIR: Update APK sekarang untuk fitur Konsultasi AI & Analisis Cuaca Real-time!";
 
+    // GENERATE DYNAMIC ACTIVITIES VIA AI
+    const weatherText = `Lokasi: ${locationName}, Cuaca: ${current.weather}, Suhu: ${current.temperature_2m}°C, Alert: ${weatherAlert || "Tidak ada"}`;
+    const activities = await generateDailyActivities(weatherText);
+
     return {
       location: locationName,
-      alert: weatherAlert, // Kembali murni untuk cuaca
-      system_notice: systemNotice, // Field khusus notifikasi
+      alert: weatherAlert, 
+      system_notice: systemNotice, 
+      activities: activities, // MASUKKAN KE RESPONSE
       insight: multiDayInsight.insight,
       action_plan: multiDayInsight.action_plan,
       current: {

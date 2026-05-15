@@ -32,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   String? _weatherAlert;
   String? _systemNotice;
   String _gpsStatus = "Mencari GPS...";
+  List<dynamic> _activities = []; // State untuk menampung kegiatan AI
 
   @override
   void initState() {
@@ -96,7 +97,8 @@ class _HomePageState extends State<HomePage> {
           _weather = data['current']?['weather'] ?? "Cerah";
           _currentCity = data['location'] ?? "Bandung";
           _weatherAlert = data['alert'];
-          _systemNotice = data['system_notice']; // Ambil notifikasi sistem
+          _systemNotice = data['system_notice'];
+          _activities = data['activities'] ?? []; // Ambil kegiatan dari AI
         });
       }
     } catch (e) {
@@ -628,37 +630,35 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: 24),
         SizedBox(
           height: 185,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            clipBehavior: Clip.none,
-            children: [
-              _buildPlantItem(
-                "Beri Pupuk", 
-                "08:00 (1 Sesi)", 
-                "Fase vegetatif aktif, pupuk diberikan 1x hari ini.", 
-                AppColors.primary, 
-                0
+          child: _activities.isEmpty 
+            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            : ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                clipBehavior: Clip.none,
+                itemCount: _activities.length,
+                itemBuilder: (context, index) {
+                  final activity = _activities[index];
+                  
+                  // Tentukan warna & icon berdasarkan tipe dari AI
+                  Color iconColor = AppColors.primary;
+                  if (activity['iconType'] == 'water') iconColor = Colors.blue;
+                  if (activity['iconType'] == 'sun') iconColor = Colors.orange;
+                  if (activity['iconType'] == 'bug') iconColor = Colors.red;
+                  
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 20),
+                    child: _buildPlantItem(
+                      activity['title'] ?? "Kegiatan", 
+                      activity['time'] ?? "--:--", 
+                      activity['desc'] ?? "", 
+                      iconColor, 
+                      index * 100
+                    ),
+                  );
+                },
               ),
-              const SizedBox(width: 20),
-              _buildPlantItem(
-                "Fungisida", 
-                "07:00, 12:00, 17:00", 
-                "Risiko jamur tinggi akibat kelembaban.", 
-                Colors.orange, 
-                100
-              ),
-              const SizedBox(width: 20),
-              _buildPlantItem(
-                "Siram Tanaman", 
-                "Dilewati", 
-                "Hujan hari ini mencukupi kebutuhan air.", 
-                Colors.grey, 
-                200
-              ),
-            ],
-          ),
         ),
       ],
     );
