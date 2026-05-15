@@ -374,7 +374,7 @@ class _ChatPageState extends State<ChatPage> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
-                  child: const Icon(Icons.add_rounded, color: AppColors.primary),
+                  child: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
                 ),
               ),
               const SizedBox(width: 12),

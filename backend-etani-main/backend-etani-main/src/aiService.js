@@ -26,7 +26,12 @@ export async function askTaniAI(prompt, imageBuffer = null, mimeType = null) {
       return "Waduh Juragan, sepertinya API Key Gemini belum dipasang di server. Mohon hubungi Team Developer.";
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-flash-latest",
+      generationConfig: {
+        maxOutputTokens: 1000,
+      },
+    });
     
     let contents = [{ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\nPesan Juragan: " + prompt }] }];
 
