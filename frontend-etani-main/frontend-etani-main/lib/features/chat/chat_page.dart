@@ -1,7 +1,10 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import 'package:feetani/core/constants/colors.dart';
+import 'package:feetani/core/constants/api_constants.dart';
 import 'package:feetani/core/widget/animated_ui.dart';
 import 'package:feetani/core/widget/skeleton_loader.dart';
 import 'package:feetani/features/report/report_page.dart';
@@ -38,7 +41,6 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    // Pesan sambutan dari AI
     _messages.add(ChatMessage(
       text: "Halo Juragan! Saya Tani-AI. Ada yang bisa saya bantu terkait kondisi tanaman atau lahan Anda hari ini? Anda juga bisa mengirimkan foto tanaman untuk saya diagnosa.",
       isUser: false,
@@ -61,7 +63,7 @@ class _ChatPageState extends State<ChatPage> {
     final XFile? image = await _picker.pickImage(
       source: source,
       imageQuality: 50, // Auto-compress ke 50% (Sangat ideal untuk AI & hemat data)
-      maxWidth: 1024,   // Batasi lebar agar tidak terlalu besar
+      maxWidth: 1024,
     );
     if (image != null) {
       setState(() {
@@ -146,20 +148,44 @@ class _ChatPageState extends State<ChatPage> {
     _selectedImage = null;
     _scrollToBottom();
 
-    // TODO: Integrasi dengan Backend API Gemini
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse("${ApiConstants.baseUrl}/chat"));
+      request.fields['message'] = text;
+      
+      if (currentImage != null) {
+        request.files.add(await http.MultipartFile.fromPath('image', currentImage.path));
+      }
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _messages.add(ChatMessage(
-          text: "Mohon maaf Juragan, saat ini Tani-AI sedang dalam masa pengembangan intensif oleh Team Developer kami agar dapat memberikan diagnosa yang sangat akurat. Terima kasih atas antusiasnya, ditunggu ya kejutan di update selanjutnya! 🙏🚀",
-          isUser: false,
-          showExpertButton: true,
-        ));
-      });
-      _scrollToBottom();
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _messages.add(ChatMessage(
+              text: data['response'],
+              isUser: false,
+              showExpertButton: true,
+            ));
+          });
+        }
+      } else {
+        throw Exception("Gagal menghubungi AI");
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _messages.add(ChatMessage(
+            text: "Waduh Juragan, sepertinya koneksi ke Tani-AI lagi terputus. Coba lagi nanti ya! 🙏",
+            isUser: false,
+          ));
+        });
+      }
     }
+    _scrollToBottom();
   }
 
   @override
@@ -191,8 +217,7 @@ class _ChatPageState extends State<ChatPage> {
               },
             ),
           ),
-          if (_isLoading)
-            _buildSkeletonBubble(),
+          if (_isLoading) _buildSkeletonBubble(),
           _buildInputArea(),
         ],
       ),
