@@ -1,8 +1,11 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { getTodayData } from './service.js';
 import { query } from './db.js';
+import { askTaniAI } from './aiService.js';
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.get('/', (req, res) => {
   res.type('text/plain').send('e-Tani API is running');
@@ -54,6 +57,24 @@ router.get('/reports', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ error: 'Gagal mengambil data laporan' });
+  }
+});
+
+router.post('/chat', upload.single('image'), async (req, res) => {
+  try {
+    const { message } = req.body;
+    const imageBuffer = req.file ? req.file.buffer : null;
+    const mimeType = req.file ? req.file.mimetype : null;
+
+    if (!message && !imageBuffer) {
+      return res.status(400).json({ error: "Pesan atau gambar harus ada, Juragan!" });
+    }
+
+    const response = await askTaniAI(message || "Apa yang bisa Anda lihat dari foto ini?", imageBuffer, mimeType);
+    res.json({ response });
+  } catch (error) {
+    console.error("Chat Route Error:", error);
+    res.status(500).json({ error: "Gagal ngobrol dengan AI." });
   }
 });
 
