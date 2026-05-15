@@ -44,6 +44,6 @@ export async function askTaniAI(prompt, imageBuffer = null, mimeType = null) {
     return response.text();
   } catch (error) {
     console.error("AI Error:", error);
-    return "Mohon maaf Juragan, sistem Tani-AI sedang sedikit gangguan. Bisa dicoba lagi sebentar lagi?";
+    return `Waduh Juragan, ada error teknis dari Google: ${error.message}. Coba kabari Team Developer ya!`;
   }
 }
