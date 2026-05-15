@@ -100,8 +100,8 @@ class _ChatPageState extends State<ChatPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildPickerOption(Icons.camera_alt_rounded, "Kamera", ImageSource.camera),
-                _buildPickerOption(CupertinoIcons.photo_on_rectangle, "Galeri", ImageSource.gallery),
+                _buildPickerOption(icon: Icons.camera_alt_rounded, label: "Kamera", source: ImageSource.camera),
+                _buildPickerOption(assetPath: "assets/images/Galeri.png", label: "Galeri", source: ImageSource.gallery),
               ],
             ),
             const SizedBox(height: 20),
@@ -111,7 +111,7 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _buildPickerOption(IconData icon, String label, ImageSource source) {
+  Widget _buildPickerOption({IconData? icon, String? assetPath, required String label, required ImageSource source}) {
     return BouncingButton(
       onTap: () {
         Navigator.pop(context);
@@ -125,7 +125,9 @@ class _ChatPageState extends State<ChatPage> {
               color: AppColors.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: AppColors.primary, size: 30),
+            child: assetPath != null 
+              ? Image.asset(assetPath, width: 30, height: 30, color: AppColors.primary)
+              : Icon(icon, color: AppColors.primary, size: 30),
           ),
           const SizedBox(height: 8),
           Text(label, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textDark)),
