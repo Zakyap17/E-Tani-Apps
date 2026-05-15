@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
@@ -100,7 +101,7 @@ class _ChatPageState extends State<ChatPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildPickerOption(Icons.camera_alt_rounded, "Kamera", ImageSource.camera),
-                _buildPickerOption(Icons.photo_library, "Galeri", ImageSource.gallery),
+                _buildPickerOption(CupertinoIcons.photo_on_rectangle, "Galeri", ImageSource.gallery),
               ],
             ),
             const SizedBox(height: 20),
