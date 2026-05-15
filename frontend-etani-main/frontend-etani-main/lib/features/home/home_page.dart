@@ -130,7 +130,7 @@ class _HomePageState extends State<HomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _scaleButton(Icons.remove, () {
+                  _scaleButton("-", () {
                     TextScaleState.decrease();
                   }),
                   const SizedBox(width: 40),
@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                   const SizedBox(width: 40),
-                  _scaleButton(Icons.add, () {
+                  _scaleButton("+", () {
                     TextScaleState.increase();
                   }),
                 ],
@@ -156,13 +156,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _scaleButton(IconData icon, VoidCallback onTap) {
+  Widget _scaleButton(String label, VoidCallback onTap) {
     return BouncingButton(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
-        child: Icon(icon, color: AppColors.primary),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(15)),
+        child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.black)),
       ),
     );
   }
@@ -263,12 +263,12 @@ class _HomePageState extends State<HomePage> {
                         BouncingButton(
                           onTap: _showTextScaleDialog,
                           child: Container(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.15),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.text_format_rounded, color: Colors.white, size: 22),
+                            child: Image.asset('assets/images/font-scale.png', height: 26, width: 26, color: Colors.white),
                           ),
                         ),
                         const SizedBox(width: 12),
