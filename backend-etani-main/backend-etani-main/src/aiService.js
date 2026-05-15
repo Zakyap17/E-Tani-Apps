@@ -28,7 +28,7 @@ export async function askTaniAI(prompt, imageBuffer = null, mimeType = null, wea
     }
 
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash", 
+      model: "gemini-flash-latest", 
       generationConfig: {
         maxOutputTokens: 500, 
         temperature: 0.7,
