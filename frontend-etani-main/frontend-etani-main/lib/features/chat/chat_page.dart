@@ -149,14 +149,30 @@ class _ChatPageState extends State<ChatPage> {
     _scrollToBottom();
 
     try {
+      // Ambil lokasi untuk konteks cuaca di AI
+      double? lat;
+      double? lon;
+      try {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.low,
+          timeLimit: const Duration(seconds: 5),
+        );
+        lat = position.latitude;
+        lon = position.longitude;
+      } catch (e) {
+        debugPrint("Chat Location Error: $e");
+      }
+
       var request = http.MultipartRequest('POST', Uri.parse("${ApiConstants.baseUrl}/chat"));
       request.fields['message'] = text;
+      if (lat != null) request.fields['lat'] = lat.toString();
+      if (lon != null) request.fields['lon'] = lon.toString();
       
       if (currentImage != null) {
         request.files.add(await http.MultipartFile.fromPath('image', currentImage.path));
       }
 
-      var streamedResponse = await request.send();
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 60));
       var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
@@ -175,11 +191,12 @@ class _ChatPageState extends State<ChatPage> {
         throw Exception("Gagal menghubungi AI");
       }
     } catch (e) {
+      debugPrint("Chat API Error: $e");
       if (mounted) {
         setState(() {
           _isLoading = false;
           _messages.add(ChatMessage(
-            text: "Waduh Juragan, sepertinya koneksi ke Tani-AI lagi terputus. Coba lagi nanti ya! 🙏",
+            text: "Waduh Juragan, sepertinya koneksi ke Tani-AI lagi terputus ($e). Coba lagi nanti ya! 🙏",
             isUser: false,
           ));
         });

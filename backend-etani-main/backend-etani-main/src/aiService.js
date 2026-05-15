@@ -20,7 +20,7 @@ Aturan Komunikasi:
 Keahlian Anda meliputi: Pengendalian hama, pemupukan, jadwal tanam, dan diagnosa penyakit tanaman.
 `;
 
-export async function askTaniAI(prompt, imageBuffer = null, mimeType = null) {
+export async function askTaniAI(prompt, imageBuffer = null, mimeType = null, weatherContext = "") {
   try {
     if (!process.env.GEMINI_API_KEY) {
       return "Waduh Juragan, sepertinya API Key Gemini belum dipasang di server. Mohon hubungi Team Developer.";
@@ -33,7 +33,13 @@ export async function askTaniAI(prompt, imageBuffer = null, mimeType = null) {
       },
     });
     
-    let contents = [{ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\nPesan Juragan: " + prompt }] }];
+    let fullPrompt = SYSTEM_PROMPT;
+    if (weatherContext) {
+      fullPrompt += "\n\nKonteks Cuaca Saat Ini:\n" + weatherContext;
+    }
+    fullPrompt += "\n\nPesan Juragan: " + prompt;
+
+    let contents = [{ role: "user", parts: [{ text: fullPrompt }] }];
 
     if (imageBuffer && mimeType) {
       contents[0].parts.push({

@@ -60,9 +60,10 @@ router.get('/reports', async (req, res) => {
   }
 });
 
+
 router.post('/chat', upload.single('image'), async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, lat, lon } = req.body;
     const imageBuffer = req.file ? req.file.buffer : null;
     const mimeType = req.file ? req.file.mimetype : null;
 
@@ -70,7 +71,19 @@ router.post('/chat', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: "Pesan atau gambar harus ada, Juragan!" });
     }
 
-    const response = await askTaniAI(message || "Apa yang bisa Anda lihat dari foto ini?", imageBuffer, mimeType);
+    let weatherContext = "";
+    if (lat && lon) {
+      try {
+        const weatherData = await getTodayData(null, parseFloat(lat), parseFloat(lon), null);
+        weatherContext = `Konteks Lokasi Juragan: ${weatherData.location}. 
+Kondisi Cuaca Saat Ini: ${weatherData.current.weather}, Suhu: ${weatherData.current.temperature}°C, Kelembaban: ${weatherData.current.humidity}%.
+Peringatan/Insight: ${weatherData.alert || "Kondisi stabil"}.`;
+      } catch (weatherError) {
+        console.error("Weather Context Error:", weatherError.message);
+      }
+    }
+
+    const response = await askTaniAI(message || "Apa yang bisa Anda lihat dari foto ini?", imageBuffer, mimeType, weatherContext);
     res.json({ response });
   } catch (error) {
     console.error("Chat Route Error:", error);
