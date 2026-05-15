@@ -147,7 +147,7 @@ export async function getTodayData(city, lat, lon, ip) {
 
     // GENERATE DYNAMIC ACTIVITIES VIA AI
     const weatherText = `Lokasi: ${locationName}, Cuaca: ${current.weather}, Suhu: ${current.temperature_2m}°C, Alert: ${weatherAlert || "Tidak ada"}`;
-    const activities = await generateDailyActivities(weatherText);
+    const activities = await generateDailyActivities(weatherText, locationName);
 
     return {
       location: locationName,

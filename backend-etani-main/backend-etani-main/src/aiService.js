@@ -63,8 +63,21 @@ export async function askTaniAI(prompt, imageBuffer = null, mimeType = null, wea
   }
 }
 
-export async function generateDailyActivities(weatherContext) {
+// SIMPAN HASIL AI DI MEMORI (CACHE) AGAR HEMAT KUOTA & TIDAK KENA LIMIT
+const activitiesCache = {};
+
+export async function generateDailyActivities(weatherContext, location = "Default") {
+  const now = Date.now();
+  const cacheKey = location;
+  
+  // Jika sudah ada di cache dan belum lewat 1 jam (3600000 ms), pakai yang lama saja
+  if (activitiesCache[cacheKey] && (now - activitiesCache[cacheKey].timestamp < 3600000)) {
+    console.log(`[Cache Hit] Mengambil kegiatan untuk ${location} dari memori.`);
+    return activitiesCache[cacheKey].data;
+  }
+
   try {
+    console.log(`[Cache Miss] Meminta saran AI baru untuk ${location}...`);
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     
     const prompt = `
@@ -83,15 +96,21 @@ export async function generateDailyActivities(weatherContext) {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     
-    // REGEX MAGIC: Cari bagian yang beneran JSON Array [ ... ]
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error("AI did not return a valid JSON array");
     
     const cleanedJson = jsonMatch[0].trim();
-    return JSON.parse(cleanedJson);
+    const data = JSON.parse(cleanedJson);
+
+    // Simpan ke Cache
+    activitiesCache[cacheKey] = {
+      timestamp: now,
+      data: data
+    };
+
+    return data;
   } catch (error) {
     console.error("AI Activities Error:", error.message);
-    // Fallback yang sedikit lebih bervariasi jika AI gagal (agar tidak bosan)
     return [
       { "title": "Pantau Lahan", "time": "06:30", "desc": "Cek embun dan tanda awal jamur di daun.", "iconType": "leaf" },
       { "title": "Nutrisi Tanaman", "time": "08:00", "desc": "Berikan asupan nutrisi sesuai jadwal fase.", "iconType": "sun" },
