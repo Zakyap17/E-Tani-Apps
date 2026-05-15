@@ -142,7 +142,7 @@ export async function getTodayData(city, lat, lon, ip) {
       weatherAlert = `ℹ️ INFO: Besok diprediksi akan ${rainTomorrow.weather.toLowerCase()} sekitar pukul ${rainTomorrow.time}. Persiapkan lahan Anda lebih awal.`;
     }
 
-    const systemNotice = "🚀 UPDATE TERSEDIA: Silakan download & install ulang APK untuk fitur GPS Akurat & Perbaikan Suhu!";
+    const systemNotice = "🚀 TANI-AI TELAH HADIR: Update APK sekarang untuk fitur Konsultasi AI & Analisis Cuaca Real-time!";
 
     return {
       location: locationName,
