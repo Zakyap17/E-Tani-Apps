@@ -14,6 +14,7 @@ import '../report/report_page.dart';
 
 import 'package:feetani/features/chat/chat_page.dart';
 import 'package:feetani/core/widget/skeleton_loader.dart';
+import '../../core/state/text_scale_state.dart';
 
 class HomePage extends StatefulWidget {
   final Function(int)? onNavigate;
@@ -113,6 +114,59 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _showTextScaleDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Pengaturan Ukuran Teks", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primary)),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _scaleButton(Icons.remove, () {
+                    TextScaleState.decrease();
+                  }),
+                  const SizedBox(width: 40),
+                  ValueListenableBuilder<double>(
+                    valueListenable: TextScaleState.scaleNotifier,
+                    builder: (context, scale, child) {
+                      return Text("${(scale * 100).toInt()}%", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold));
+                    },
+                  ),
+                  const SizedBox(width: 40),
+                  _scaleButton(Icons.add, () {
+                    TextScaleState.increase();
+                  }),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text("Sesuaikan ukuran agar nyaman dibaca", style: TextStyle(color: Colors.grey, fontSize: 13)),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _scaleButton(IconData icon, VoidCallback onTap) {
+    return BouncingButton(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
+        child: Icon(icon, color: AppColors.primary),
+      ),
+    );
+  }
+
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 11) {
@@ -204,16 +258,32 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Image.asset('assets/images/logo.png', height: 55),
-                    BouncingButton(
-                      onTap: () {},
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          shape: BoxShape.circle,
+                    Row(
+                      children: [
+                        BouncingButton(
+                          onTap: _showTextScaleDialog,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.text_format_rounded, color: Colors.white, size: 22),
+                          ),
                         ),
-                        child: const Icon(Icons.notifications_none_rounded, color: Colors.white, size: 22),
-                      ),
+                        const SizedBox(width: 12),
+                        BouncingButton(
+                          onTap: () {},
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.notifications_none_rounded, color: Colors.white, size: 22),
+                          ),
+                        ),
+                      ],
                     )
                   ],
                 ),
