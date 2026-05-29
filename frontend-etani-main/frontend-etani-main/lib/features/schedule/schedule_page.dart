@@ -396,7 +396,6 @@ class _SchedulePageState extends State<SchedulePage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      // Angkat FAB agar tidak tertutup bottom nav bar
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: _isLoading
           ? _buildLoading()
@@ -405,16 +404,40 @@ class _SchedulePageState extends State<SchedulePage>
               : _schedule.isEmpty
                   ? _buildEmptyState()
                   : _buildScheduleView(),
+      // Custom FAB agar icon dan teks proporsional
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 72),
-        child: FloatingActionButton.extended(
-          onPressed: () => _showAddEditBlockDialog(),
-          backgroundColor: AppColors.primary,
-          elevation: 6,
-          icon: const Icon(Icons.add_rounded, color: Colors.white),
-          label: const Text('Tambah Blok',
-              style: TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w700)),
+        child: BouncingButton(
+          onTap: () => _showAddEditBlockDialog(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.45),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add_circle_rounded, color: Colors.white, size: 22),
+                SizedBox(width: 10),
+                Text(
+                  'Tambah Blok',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -583,20 +606,25 @@ class _SchedulePageState extends State<SchedulePage>
                         BouncingButton(
                           onTap: _showManageBlocksSheet,
                           child: Container(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 9),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.3)),
                             ),
                             child: const Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.dashboard_customize_rounded,
+                                // tune_rounded = icon setelan/manage yang universal
+                                Icon(Icons.tune_rounded,
                                     color: Colors.white, size: 18),
                                 SizedBox(width: 6),
                                 Text('Kelola',
                                     style: TextStyle(
                                         color: Colors.white,
-                                        fontWeight: FontWeight.w700,
+                                        fontWeight: FontWeight.w800,
                                         fontSize: 13)),
                               ],
                             ),
