@@ -396,6 +396,8 @@ class _SchedulePageState extends State<SchedulePage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      // Angkat FAB agar tidak tertutup bottom nav bar
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: _isLoading
           ? _buildLoading()
           : _error != null
@@ -403,13 +405,17 @@ class _SchedulePageState extends State<SchedulePage>
               : _schedule.isEmpty
                   ? _buildEmptyState()
                   : _buildScheduleView(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddEditBlockDialog(),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('Tambah Blok',
-            style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w700)),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 72),
+        child: FloatingActionButton.extended(
+          onPressed: () => _showAddEditBlockDialog(),
+          backgroundColor: AppColors.primary,
+          elevation: 6,
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
+          label: const Text('Tambah Blok',
+              style: TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w700)),
+        ),
       ),
     );
   }
@@ -916,7 +922,9 @@ class _SchedulePageState extends State<SchedulePage>
         break;
       case 'bug':
         iconColor = Colors.red;
-        iconData = Icons.pest_control_rounded;
+        // pest_control_rounded tidak ada di semua versi Material Icons,
+        // gunakan bug_report_rounded yang universal
+        iconData = Icons.bug_report_rounded;
         break;
       case 'sun':
         iconColor = Colors.orange;
@@ -944,7 +952,9 @@ class _SchedulePageState extends State<SchedulePage>
                       : iconColor.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(isSkip ? Icons.skip_next_rounded : iconData,
+                // skip_next_rounded tidak tersedia di semua versi,
+                // gunakan not_interested yang lebih universal
+                child: Icon(isSkip ? Icons.not_interested_rounded : iconData,
                     color: isSkip ? Colors.grey : iconColor, size: 22),
               ),
               if (!isLast)
