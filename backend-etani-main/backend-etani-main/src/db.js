@@ -25,8 +25,20 @@ export const initDb = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Auto-create table blocks (Manajemen Blok Lahan Dinamis)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS blocks (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        crop_type VARCHAR(255) NOT NULL,
+        planting_date DATE NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
     
-    console.log("Database initialized: Table 'reports' is ready.");
+    console.log("Database initialized: Tables 'reports' and 'blocks' are ready.");
     client.release();
   } catch (error) {
     console.error("Error initializing Database PostgreSQL: ", error.message);
