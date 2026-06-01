@@ -64,7 +64,7 @@ router.get('/reports', async (req, res) => {
 
 router.post('/chat', upload.single('image'), async (req, res) => {
   try {
-    const { message, lat, lon } = req.body;
+    const { message, lat, lon, history: historyRaw } = req.body;
     const imageBuffer = req.file ? req.file.buffer : null;
     const mimeType = req.file ? req.file.mimetype : null;
 
@@ -72,19 +72,28 @@ router.post('/chat', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: "Pesan atau gambar harus ada, Juragan!" });
     }
 
+    // Parse riwayat percakapan dari frontend
+    let chatHistory = [];
+    if (historyRaw) {
+      try {
+        chatHistory = JSON.parse(historyRaw);
+      } catch (e) {
+        chatHistory = [];
+      }
+    }
+
+    // Ambil konteks cuaca hanya jika ini pesan pertama (belum ada history)
     let weatherContext = "";
-    if (lat && lon) {
+    if (lat && lon && chatHistory.length === 0) {
       try {
         const weatherData = await getTodayData(null, parseFloat(lat), parseFloat(lon), null);
-        weatherContext = `Konteks Lokasi Juragan: ${weatherData.location}. 
-Kondisi Cuaca Saat Ini: ${weatherData.current.weather}, Suhu: ${weatherData.current.temperature}°C, Kelembaban: ${weatherData.current.humidity}%.
-Peringatan/Insight: ${weatherData.alert || "Kondisi stabil"}.`;
+        weatherContext = `Lokasi: ${weatherData.location}. Cuaca: ${weatherData.current.weather}, Suhu: ${weatherData.current.temperature}°C, Kelembaban: ${weatherData.current.humidity}%. Peringatan: ${weatherData.alert || "Kondisi stabil"}.`;
       } catch (weatherError) {
         console.error("Weather Context Error:", weatherError.message);
       }
     }
 
-    const response = await askTaniAI(message || "Apa yang bisa Anda lihat dari foto ini?", imageBuffer, mimeType, weatherContext);
+    const response = await askTaniAI(message || "Apa yang bisa Anda lihat dari foto ini?", imageBuffer, mimeType, weatherContext, chatHistory);
     res.json({ response });
   } catch (error) {
     console.error("Chat Route Error:", error);

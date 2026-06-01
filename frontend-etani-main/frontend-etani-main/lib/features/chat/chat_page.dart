@@ -155,22 +155,36 @@ class _ChatPageState extends State<ChatPage> {
     _scrollToBottom();
 
     try {
-      // Ambil lokasi untuk konteks cuaca di AI
+      // Ambil lokasi untuk konteks cuaca (hanya relevan di pesan pertama)
       double? lat;
       double? lon;
-      try {
-        Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.low,
-          timeLimit: const Duration(seconds: 5),
-        );
-        lat = position.latitude;
-        lon = position.longitude;
-      } catch (e) {
-        debugPrint("Chat Location Error: $e");
+      final bool isFirstMessage = _messages.length <= 2; // welcome msg + pesan user pertama
+      if (isFirstMessage) {
+        try {
+          Position position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.low,
+            timeLimit: const Duration(seconds: 5),
+          );
+          lat = position.latitude;
+          lon = position.longitude;
+        } catch (e) {
+          debugPrint("Chat Location Error: $e");
+        }
       }
+
+      // Bangun riwayat percakapan untuk dikirim ke AI
+      // - Skip pesan sambutan AI di index 0 (tidak ada user message pasangannya)
+      // - Skip pesan user terakhir yang baru saja ditambahkan (itu adalah prompt saat ini)
+      final historyMessages = _messages.length > 2
+          ? _messages.sublist(1, _messages.length - 1)
+          : <ChatMessage>[];
+      final history = historyMessages
+          .map((m) => {'role': m.isUser ? 'user' : 'model', 'text': m.text})
+          .toList();
 
       var request = http.MultipartRequest('POST', Uri.parse("${ApiConstants.baseUrl}/chat"));
       request.fields['message'] = text;
+      request.fields['history'] = json.encode(history);
       if (lat != null) request.fields['lat'] = lat.toString();
       if (lon != null) request.fields['lon'] = lon.toString();
       
