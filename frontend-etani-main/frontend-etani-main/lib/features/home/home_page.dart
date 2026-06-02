@@ -192,9 +192,9 @@ class _HomePageState extends State<HomePage> {
             _buildHeroSection(),
             const SizedBox(height: 70), // Spacing for overlapping stats
             
-            _buildSystemNotice(), // Banner Notifikasi Baru
-            
             _buildAnalysisBanner(),
+
+            _buildSystemNotice(), // Banner Notifikasi Baru
             const SizedBox(height: 30),
             
             _buildQuickActions(),
@@ -363,9 +363,43 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildAnalysisBanner() {
-    // Jika tidak ada alert, kita tampilkan tips default atau sembunyikan
+    if (_isLoadingWeather) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.grey.withOpacity(0.1)),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)],
+          ),
+          child: const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SkeletonLoader(width: 44, height: 44, borderRadius: BorderRadius.all(Radius.circular(22))),
+              SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonLoader(width: 140, height: 16),
+                  SizedBox(height: 8),
+                  SkeletonLoader(width: 220, height: 13),
+                  SizedBox(height: 5),
+                  SkeletonLoader(width: 180, height: 13),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final hasAlert = _weatherAlert != null;
-    
+    final String infoText = _weatherAlert ??
+        "Cuaca $_weather, suhu $_temp°C. Tidak ada prediksi hujan dalam 24 jam ke depan. Kondisi lahan terpantau baik.";
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: FadeSlideAnimation(
@@ -374,7 +408,7 @@ class _HomePageState extends State<HomePage> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: hasAlert ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9), 
+            color: hasAlert ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: hasAlert ? Colors.orange.withOpacity(0.3) : Colors.green.withOpacity(0.3)),
           ),
@@ -388,7 +422,7 @@ class _HomePageState extends State<HomePage> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  hasAlert ? Icons.warning_amber_rounded : Icons.eco_rounded, 
+                  hasAlert ? Icons.warning_amber_rounded : Icons.wb_sunny_rounded,
                   color: hasAlert ? Colors.orange : Colors.green,
                 ),
               ),
@@ -398,16 +432,16 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      hasAlert ? "Peringatan Cuaca" : "Tips Lahan Hari Ini",
+                      hasAlert ? "Peringatan Cuaca" : "Info Cuaca Hari Ini",
                       style: TextStyle(
-                        fontSize: 18, 
-                        fontWeight: FontWeight.w800, 
-                        color: hasAlert ? Colors.orange : AppColors.primary
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: hasAlert ? Colors.orange : AppColors.primary,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _weatherAlert ?? "Kondisi lahan terpantau stabil. Pastikan drainase tetap bersih untuk mengantisipasi perubahan cuaca mendadak.",
+                      infoText,
                       style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.4),
                     ),
                   ],
