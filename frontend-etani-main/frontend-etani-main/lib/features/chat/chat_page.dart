@@ -198,7 +198,7 @@ class _ChatPageState extends State<ChatPage> {
         ));
       }
 
-      var streamedResponse = await request.send().timeout(const Duration(seconds: 60));
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 90));
       var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
@@ -218,11 +218,14 @@ class _ChatPageState extends State<ChatPage> {
       }
     } catch (e) {
       debugPrint("Chat API Error: $e");
+      final String errorMsg = e.toString().toLowerCase().contains('timeout')
+          ? "Tani-AI butuh waktu lebih lama dari biasanya, Juragan. Tolong coba kirim ulang pertanyaannya ya."
+          : "Waduh Juragan, sepertinya koneksi ke Tani-AI sedang terganggu. Pastikan internet Anda stabil lalu coba lagi.";
       if (mounted) {
         setState(() {
           _isLoading = false;
           _messages.add(ChatMessage(
-            text: "Waduh Juragan, sepertinya koneksi ke Tani-AI lagi terputus ($e). Coba lagi nanti ya! 🙏",
+            text: errorMsg,
             isUser: false,
           ));
         });
