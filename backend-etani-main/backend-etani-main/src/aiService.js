@@ -27,7 +27,7 @@ export async function askTaniAI(prompt, imageBuffer = null, mimeType = null, wea
     }
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-flash-latest",
+      model: "gemini-2.0-flash",
       systemInstruction: SYSTEM_INSTRUCTION,
       generationConfig: {
         maxOutputTokens: 1000,
@@ -62,13 +62,24 @@ export async function askTaniAI(prompt, imageBuffer = null, mimeType = null, wea
     const result = await chat.sendMessage(parts);
     return result.response.text();
   } catch (error) {
-    console.error("AI Error:", error.message);
+    const msg = error.message || "";
+    console.error("[Tani-AI Error]", msg);
 
-    if (error.message.includes("429") || error.message.toLowerCase().includes("quota")) {
-      return "Mohon maaf Juragan, Tani-AI sedang menerima banyak pertanyaan saat ini. Mohon tunggu sekitar 30-60 detik ya sebelum bertanya kembali agar saya bisa menyiapkan jawaban terbaik. Terima kasih atas kesabarannya!";
+    if (msg.includes("429") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("resource exhausted")) {
+      return "Mohon maaf Juragan, Tani-AI sedang menerima banyak pertanyaan saat ini. Mohon tunggu sekitar 30-60 detik ya sebelum bertanya kembali. Terima kasih atas kesabarannya!";
     }
 
-    return "Waduh Juragan, sepertinya Tani-AI sedang sedikit lelah. Coba kirim ulang pertanyaannya dalam beberapa saat lagi ya!";
+    if (msg.includes("403") || msg.toLowerCase().includes("permission denied") || msg.toLowerCase().includes("api key")) {
+      console.error("[Tani-AI] API Key tidak valid atau tidak punya akses ke model ini.");
+      return "Waduh Juragan, sepertinya ada masalah konfigurasi di server kami. Mohon hubungi Team Developer.";
+    }
+
+    if (msg.includes("404") || msg.toLowerCase().includes("not found")) {
+      console.error("[Tani-AI] Model tidak ditemukan. Cek nama model di aiService.js.");
+      return "Waduh Juragan, Tani-AI sedang dalam pemeliharaan. Mohon coba lagi dalam beberapa saat.";
+    }
+
+    return "Waduh Juragan, Tani-AI sedang tidak bisa menjawab saat ini. Coba kirim ulang pertanyaannya ya!";
   }
 }
 
