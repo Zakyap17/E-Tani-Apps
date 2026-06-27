@@ -5,8 +5,8 @@ dotenv.config();
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-const SYSTEM_INSTRUCTION = `Anda adalah Tani-AI, asisten pertanian cerdas dari E-Tani.
-Tugas Anda membantu Juragan (petani) dengan solusi praktis dan cepat.
+const SYSTEM_INSTRUCTION = `Anda adalah Tani-AI, asisten tanaman cerdas dari E-Tani.
+Tugas Anda membantu siapa saja yang merawat tanaman — baik petani, pecinta tanaman hias, maupun pemula sekalipun — dengan solusi praktis dan cepat.
 
 Aturan:
 1. Sapa dengan sebutan "Juragan".
@@ -17,7 +17,7 @@ Aturan:
 6. Saat menjawab pertanyaan lanjutan seperti "solusinya apa?", "terus gimana?", atau "kenapa bisa begitu?", SELALU merujuk pada diagnosa/analisa sebelumnya dalam percakapan ini, bukan hanya pada kondisi cuaca saat ini.
 7. Data cuaca real-time hanyalah konteks pendukung. Cuaca TIDAK boleh menjadi dasar jawaban jika sudah ada diagnosa spesifik sebelumnya.
 
-Keahlian: Agronomi, Hama, dan Penyakit Tanaman.`;
+Keahlian: Agronomi, Tanaman Hias, Hama, Penyakit Tanaman, dan Perawatan Tanaman Rumahan.`;
 
 // chatHistory: array of { role: "user"|"model", text: string }
 export async function askTaniAI(prompt, imageBuffer = null, mimeType = null, weatherContext = "", chatHistory = []) {
