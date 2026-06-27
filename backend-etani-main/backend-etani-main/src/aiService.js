@@ -1,9 +1,9 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const SYSTEM_INSTRUCTION = `Anda adalah Tani-AI, asisten pertanian cerdas dari E-Tani.
 Tugas Anda membantu Juragan (petani) dengan solusi praktis dan cepat.
@@ -22,68 +22,72 @@ Keahlian: Agronomi, Hama, dan Penyakit Tanaman.`;
 // chatHistory: array of { role: "user"|"model", text: string }
 export async function askTaniAI(prompt, imageBuffer = null, mimeType = null, weatherContext = "", chatHistory = []) {
   try {
-    if (!process.env.GEMINI_API_KEY) {
-      return "Waduh Juragan, sepertinya API Key Gemini belum dipasang di server. Mohon hubungi Team Developer.";
+    if (!process.env.GROQ_API_KEY) {
+      return "Waduh Juragan, sepertinya API Key belum dipasang di server. Mohon hubungi Team Developer.";
     }
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
-      systemInstruction: SYSTEM_INSTRUCTION,
-      generationConfig: {
-        maxOutputTokens: 1000,
-        temperature: 0.7,
-      },
-    });
-
-    // Konversi riwayat percakapan ke format Gemini
-    const geminiHistory = chatHistory.map(h => ({
-      role: h.role === "model" ? "model" : "user",
-      parts: [{ text: h.text }],
+    // Konversi history ke format OpenAI/Groq (role: "model" → "assistant")
+    const groqHistory = chatHistory.map(h => ({
+      role: h.role === "model" ? "assistant" : "user",
+      content: h.text,
     }));
 
-    // Tambahkan konteks cuaca hanya pada pesan pertama agar tidak mengganggu konsistensi diagnosa
+    // Tambahkan konteks cuaca hanya pada pesan pertama
     let currentPrompt = prompt;
-    if (weatherContext && geminiHistory.length === 0) {
+    if (weatherContext && chatHistory.length === 0) {
       currentPrompt = `Konteks Cuaca Saat Ini: ${weatherContext}\n\nPertanyaan Juragan: ${prompt}`;
     }
 
-    const parts = [{ text: currentPrompt }];
+    // Pilih model: vision untuk pesan dengan gambar, versatile untuk teks
+    const model = imageBuffer
+      ? "meta-llama/llama-4-scout-17b-16e-instruct"
+      : "llama-3.3-70b-versatile";
+
+    // Format pesan user: array (teks + gambar) atau string biasa
+    let userContent;
     if (imageBuffer && mimeType) {
-      parts.push({
-        inlineData: {
-          mimeType: mimeType,
-          data: imageBuffer.toString("base64"),
+      userContent = [
+        { type: "text", text: currentPrompt },
+        {
+          type: "image_url",
+          image_url: {
+            url: `data:${mimeType};base64,${imageBuffer.toString("base64")}`,
+          },
         },
-      });
+      ];
+    } else {
+      userContent = currentPrompt;
     }
 
-    // Gunakan startChat agar AI membaca seluruh riwayat percakapan
-    const chat = model.startChat({ history: geminiHistory });
-    const result = await chat.sendMessage(parts);
-    return result.response.text();
+    const completion = await groq.chat.completions.create({
+      model,
+      messages: [
+        { role: "system", content: SYSTEM_INSTRUCTION },
+        ...groqHistory,
+        { role: "user", content: userContent },
+      ],
+      max_tokens: 1000,
+      temperature: 0.7,
+    });
+
+    return completion.choices[0].message.content;
   } catch (error) {
     const msg = error.message || "";
     console.error("[Tani-AI Error]", msg);
 
-    if (msg.includes("429") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("resource exhausted")) {
+    if (error.status === 429 || msg.toLowerCase().includes("rate limit")) {
       return "Mohon maaf Juragan, Tani-AI sedang menerima banyak pertanyaan saat ini. Mohon tunggu sekitar 30-60 detik ya sebelum bertanya kembali. Terima kasih atas kesabarannya!";
     }
 
-    if (msg.includes("403") || msg.toLowerCase().includes("permission denied") || msg.toLowerCase().includes("api key")) {
-      console.error("[Tani-AI] API Key tidak valid atau tidak punya akses ke model ini.");
+    if (error.status === 401 || msg.toLowerCase().includes("api key") || msg.toLowerCase().includes("authentication")) {
+      console.error("[Tani-AI] API Key Groq tidak valid.");
       return "Waduh Juragan, sepertinya ada masalah konfigurasi di server kami. Mohon hubungi Team Developer.";
-    }
-
-    if (msg.includes("404") || msg.toLowerCase().includes("not found")) {
-      console.error("[Tani-AI] Model tidak ditemukan. Cek nama model di aiService.js.");
-      return "Waduh Juragan, Tani-AI sedang dalam pemeliharaan. Mohon coba lagi dalam beberapa saat.";
     }
 
     return "Waduh Juragan, Tani-AI sedang tidak bisa menjawab saat ini. Coba kirim ulang pertanyaannya ya!";
   }
 }
 
-// FUNGSI INI SUDAH DIGANTIKAN OLEH LOGIKA MANUAL DI SERVICE.JS UNTUK STABILITAS
 export async function generateDailyActivities(weatherContext, location = "Default") {
   return [];
 }

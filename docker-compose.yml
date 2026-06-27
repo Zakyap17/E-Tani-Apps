@@ -16,6 +16,7 @@ services:
       - DB_PASSWORD=etani2026
       - DB_NAME=etani_db
       - DB_PORT=5436
+      - GROQ_API_KEY=${GROQ_API_KEY}
     networks:
       - etani-network
 
