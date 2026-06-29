@@ -38,10 +38,10 @@ export async function askTaniAI(prompt, imageBuffer = null, mimeType = null, wea
       currentPrompt = `Konteks Cuaca Saat Ini: ${weatherContext}\n\nPertanyaan Juragan: ${prompt}`;
     }
 
-    // Pilih model: vision untuk pesan dengan gambar, instant untuk teks (14.400 RPM vs 30 RPM)
+    // Pilih model: vision untuk pesan dengan gambar, gemma2 untuk teks (1.500 RPM, kualitas lebih baik)
     const model = imageBuffer
       ? "meta-llama/llama-4-scout-17b-16e-instruct"
-      : "llama-3.1-8b-instant";
+      : "gemma2-9b-it";
 
     // Format pesan user: array (teks + gambar) atau string biasa
     let userContent;
